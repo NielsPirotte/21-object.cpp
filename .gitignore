@@ -1,0 +1,10 @@
+#ignore 21-object-*
+21-object-*
+#ignore Makefile
+Makefile
+#ignore istBovenkaak.vp
+istBovenkaak.vp
+#ignore istOnderkaak.vp
+istOnderkaak.vp
+#ignore obj/
+obj/
