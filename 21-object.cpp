@@ -799,7 +799,7 @@ void keyCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, 
 		bovenkaak->m_material->setWhite();
 	}
 
-	if (istBovenkaak != nullptr) istBovenkaak->setPosition(-(bovenkaak->getLocalPos()));
+	if (istBovenkaak != nullptr) istBovenkaak->setPosition((bovenkaak->getLocalPos()));
 	wilupdaten = true;
 }
 
@@ -858,12 +858,12 @@ void mouseMotionCallback(GLFWwindow* a_window, double a_posX, double a_posY)
 		selectedObject->setLocalPos(posObject);
 		if (selectedObject == bovenkaak) {
 			gelopenAfstand->add(verschil);
-			istBovenkaak->setPosition(-(bovenkaak->getLocalPos()));
+			istBovenkaak->setPosition((bovenkaak->getLocalPos()));
 			wilupdaten = true;
 		}
 		else {
 			gelopenAfstand->sub(verschil);
-			istOnderkaak->setPosition(-(onderkaak->getLocalPos()));
+			istOnderkaak->setPosition((onderkaak->getLocalPos()));
 			wilupdaten = true;
 		}
 	}
@@ -872,6 +872,14 @@ void mouseMotionCallback(GLFWwindow* a_window, double a_posX, double a_posY)
 		cMatrix3d rot = selectedObject->getLocalRot();
 		rot.rotateAboutGlobalAxisDeg(draaiAs, dx);
 		selectedObject->setLocalRot(rot);
+		if (selectedObject == onderkaak) {
+			istOnderkaak->setRotation(rot);
+			gelopenAfstand->add(std::numeric_limits<double>::infinity(), 0.0, 0.0);
+		}
+		else {
+			istBovenkaak->setRotation(rot);
+			gelopenAfstand->add(std::numeric_limits<double>::infinity(), 0.0, 0.0);
+		}
 
 		//// get the vector that goes from the camera to the selected point (mouse click)
 		//cVector3d vCameraObject = selectedPoint - camera->getLocalPos();
