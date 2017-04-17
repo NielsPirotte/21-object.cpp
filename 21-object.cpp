@@ -72,7 +72,7 @@ cVector3d selectedPoint;
 //Bolleke om te zien waar de kaak raakt
 cMesh* bolleke;
 
-cVector3d* positie = new cVector3d(0.0,0.0,0.0);
+cVector3d* positie = new cVector3d(0.0, 0.0, 0.0);
 
 // a colored background
 cBackground* background;
@@ -112,7 +112,7 @@ cThread* hapticsThread;
 GLFWwindow* window = NULL;
 
 // current width of window
-int width  = 0;
+int width = 0;
 
 // current height of window
 int height = 0;
@@ -134,12 +134,15 @@ vector<cCollisionAABBBox> leafnodes2;
 
 // Als de objecten ver van elkaar staan,
 // kijk pas als de afstand tussen de 2 overschreden is.
-cVector3d* gelopenAfstand = new cVector3d(0.0,0.0,0.0);
+cVector3d* gelopenAfstand = new cVector3d(0.0, 0.0, 0.0);
 float minimumTeLopen = 0;
 
 InnerSphereTree* istBovenkaak;
 InnerSphereTree* istOnderkaak;
 
+cVector3d draaiAs;
+
+const GLFWvidmode* mode;
 
 //------------------------------------------------------------------------------
 // DECLARED MACROS
@@ -188,84 +191,84 @@ void close(void);
 
 int main(int argc, char* argv[])
 {
-    //--------------------------------------------------------------------------
-    // INITIALIZATION
-    //--------------------------------------------------------------------------
+	//--------------------------------------------------------------------------
+	// INITIALIZATION
+	//--------------------------------------------------------------------------
 
-    cout << endl;
-    cout << "-----------------------------------" << endl;
-    cout << "Bachelorproef" << endl;
-    cout << "Casper Vranken | Niels Pirotte" << endl;
-    cout << "Uhasselt | KULeuven" << endl;
-    cout << "-----------------------------------" << endl << endl << endl;
-    cout << "Keyboard Options:" << endl << endl;
-    cout << "[2] - Wireframe (ON/OFF)" << endl;
-    cout << "[3] - Collision tree (ON/OFF)" << endl;
-    cout << "[4] - Increase collision tree display depth" << endl;
-    cout << "[5] - Decrease collision tree display depth" << endl;
-    cout << "[t] - Enable/Disable display of triangles" << endl;
-    cout << "[f] - Enable/Disable full screen mode" << endl;
-    cout << "[q] - Exit application" << endl;
-    cout << endl << endl;
+	cout << endl;
+	cout << "-----------------------------------" << endl;
+	cout << "Bachelorproef" << endl;
+	cout << "Casper Vranken | Niels Pirotte" << endl;
+	cout << "Uhasselt | KULeuven" << endl;
+	cout << "-----------------------------------" << endl << endl << endl;
+	cout << "Keyboard Options:" << endl << endl;
+	cout << "[2] - Wireframe (ON/OFF)" << endl;
+	cout << "[3] - Collision tree (ON/OFF)" << endl;
+	cout << "[4] - Increase collision tree display depth" << endl;
+	cout << "[5] - Decrease collision tree display depth" << endl;
+	cout << "[t] - Enable/Disable display of triangles" << endl;
+	cout << "[f] - Enable/Disable full screen mode" << endl;
+	cout << "[q] - Exit application" << endl;
+	cout << endl << endl;
 
-    // parse first arg to try and locate resources
-    resourceRoot = string(argv[0]).substr(0,string(argv[0]).find_last_of("/\\")+1);
+	// parse first arg to try and locate resources
+	resourceRoot = string(argv[0]).substr(0, string(argv[0]).find_last_of("/\\") + 1);
 
 
-    //--------------------------------------------------------------------------
-    // OPEN GL - WINDOW DISPLAY
-    //--------------------------------------------------------------------------
+	//--------------------------------------------------------------------------
+	// OPEN GL - WINDOW DISPLAY
+	//--------------------------------------------------------------------------
 
-    // initialize GLFW library
-    if (!glfwInit())
-    {
-        cout << "failed initialization" << endl;
-        cSleepMs(1000);
-        return 1;
-    }
+	// initialize GLFW library
+	if (!glfwInit())
+	{
+		cout << "failed initialization" << endl;
+		cSleepMs(1000);
+		return 1;
+	}
 
-    // set error callback
-    glfwSetErrorCallback(errorCallback);
+	// set error callback
+	glfwSetErrorCallback(errorCallback);
 
-    // compute desired size of window
-    const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-    int w = 0.8 * mode->height;
-    int h = 0.5 * mode->height;
-    int x = 0.5 * (mode->width - w);
-    int y = 0.5 * (mode->height - h);
+	// compute desired size of window
+	mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+	int w = 0.8 * mode->height;
+	int h = 0.5 * mode->height;
+	int x = 0.5 * (mode->width - w);
+	int y = 0.5 * (mode->height - h);
 
-    // set OpenGL version
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+	// set OpenGL version
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 
-    // set active stereo mode
-    if (stereoMode == C_STEREO_ACTIVE)
-    {
-        glfwWindowHint(GLFW_STEREO, GL_TRUE);
-    }
-    else
-    {
-        glfwWindowHint(GLFW_STEREO, GL_FALSE);
-    }
+	// set active stereo mode
+	if (stereoMode == C_STEREO_ACTIVE)
+	{
+		glfwWindowHint(GLFW_STEREO, GL_TRUE);
+	}
+	else
+	{
+		glfwWindowHint(GLFW_STEREO, GL_FALSE);
+	}
 
-    // create display context
-    window = glfwCreateWindow(w, h, "Bachelorproef - Casper Vranken | Niels Pirotte", NULL, NULL);
-    if (!window)
-    {
-        cout << "failed to create window" << endl;
-        cSleepMs(1000);
-        glfwTerminate();
-        return 1;
-    }
+	// create display context
+	window = glfwCreateWindow(w, h, "Bachelorproef - Casper Vranken | Niels Pirotte", NULL, NULL);
+	if (!window)
+	{
+		cout << "failed to create window" << endl;
+		cSleepMs(1000);
+		glfwTerminate();
+		return 1;
+	}
 
-    // get width and height of window
-    glfwGetWindowSize(window, &width, &height);
+	// get width and height of window
+	glfwGetWindowSize(window, &width, &height);
 
-    // set position of window
-    glfwSetWindowPos(window, x, y);
+	// set position of window
+	glfwSetWindowPos(window, x, y);
 
-    // set key callback
-    glfwSetKeyCallback(window, keyCallback);
+	// set key callback
+	glfwSetKeyCallback(window, keyCallback);
 
 	// set mouse position callback
 	glfwSetCursorPosCallback(window, mouseMotionCallback);
@@ -276,39 +279,39 @@ int main(int argc, char* argv[])
 	// set mouse scroll callback
 	glfwSetScrollCallback(window, mouseScrollCallback);
 
-    // set resize callback
-    glfwSetWindowSizeCallback(window, windowSizeCallback);
+	// set resize callback
+	glfwSetWindowSizeCallback(window, windowSizeCallback);
 
-    // set current display context
-    glfwMakeContextCurrent(window);
+	// set current display context
+	glfwMakeContextCurrent(window);
 
-    // sets the swap interval for the current display context
-    glfwSwapInterval(swapInterval);
+	// sets the swap interval for the current display context
+	glfwSwapInterval(swapInterval);
 
 #ifdef GLEW_VERSION
-    // initialize GLEW library
-    if (glewInit() != GLEW_OK)
-    {
-        cout << "failed to initialize GLEW library" << endl;
-        glfwTerminate();
-        return 1;
-    }
+	// initialize GLEW library
+	if (glewInit() != GLEW_OK)
+	{
+		cout << "failed to initialize GLEW library" << endl;
+		glfwTerminate();
+		return 1;
+	}
 #endif
 
 
-    //--------------------------------------------------------------------------
-    // WORLD - CAMERA - LIGHTING
-    //--------------------------------------------------------------------------
+	//--------------------------------------------------------------------------
+	// WORLD - CAMERA - LIGHTING
+	//--------------------------------------------------------------------------
 
-    // create a new world.
-    world = new cWorld();
+	// create a new world.
+	world = new cWorld();
 
-    // set the background color of the environment
-    world->m_backgroundColor.setBlack();
+	// set the background color of the environment
+	world->m_backgroundColor.setBlack();
 
-    // create a camera and insert it into the virtual world
-    camera = new cCamera(world);
-    world->addChild(camera);
+	// create a camera and insert it into the virtual world
+	camera = new cCamera(world);
+	world->addChild(camera);
 
 	// define a basis in spherical coordinates for the camera
 	camera->setSphericalReferences(cVector3d(0, 0, 0),    // origin
@@ -318,49 +321,48 @@ int main(int argc, char* argv[])
 	camera->setSphericalDeg(100,    // spherical coordinate radius
 		60,     // spherical coordinate polar angle
 		10);    // spherical coordinate azimuth angle
+				// set the near and far clipping planes of the camera
+				// anything in front or behind these clipping planes will not be rendered
+	camera->setClippingPlanes(1, 1000);
 
-    // set the near and far clipping planes of the camera
-    // anything in front or behind these clipping planes will not be rendered
-    camera->setClippingPlanes(1, 1000);
+	// set stereo mode
+	camera->setStereoMode(stereoMode);
 
-    // set stereo mode
-    camera->setStereoMode(stereoMode);
+	// set stereo eye separation and focal length (applies only if stereo is enabled)
+	camera->setStereoEyeSeparation(0.03);
+	camera->setStereoFocalLength(1.5);
 
-    // set stereo eye separation and focal length (applies only if stereo is enabled)
-    camera->setStereoEyeSeparation(0.03);
-    camera->setStereoFocalLength(1.5);
+	// enable multi-pass rendering to handle transparent objects
+	camera->setUseMultipassTransparency(true);
 
-    // enable multi-pass rendering to handle transparent objects
-    camera->setUseMultipassTransparency(true);
+	// create a light source
+	light = new cDirectionalLight(world);
 
-    // create a light source
-    light = new cDirectionalLight(world);
+	// attach light to camera
+	camera->addChild(light);
 
-    // attach light to camera
-    camera->addChild(light);
+	// enable light source
+	light->setEnabled(true);
 
-    // enable light source
-    light->setEnabled(true);
+	// define the direction of the light beam
+	light->setDir(-3.0, -0.5, 0.0);
 
-    // define the direction of the light beam
-    light->setDir(-3.0,-0.5, 0.0);
+	// set lighting conditions
+	light->m_ambient.set(0.4f, 0.4f, 0.4f);
+	light->m_diffuse.set(0.8f, 0.8f, 0.8f);
+	light->m_specular.set(1.0f, 1.0f, 1.0f);
 
-    // set lighting conditions
-    light->m_ambient.set(0.4f, 0.4f, 0.4f);
-    light->m_diffuse.set(0.8f, 0.8f, 0.8f);
-    light->m_specular.set(1.0f, 1.0f, 1.0f);
+	//--------------------------------------------------------------------------
+	// CREATE OBJECT
+	//--------------------------------------------------------------------------
 
-    //--------------------------------------------------------------------------
-    // CREATE OBJECT
-    //--------------------------------------------------------------------------
-
-    // create a virtual mesh
-    onderkaak = new cMesh();
+	// create a virtual mesh
+	onderkaak = new cMesh();
 	bovenkaak = new cMesh();
 	bolleke = new cMesh();
 
-    // add object to world
-    world->addChild(onderkaak);
+	// add object to world
+	world->addChild(onderkaak);
 	world->addChild(bovenkaak);
 	world->addChild(bolleke);
 
@@ -372,29 +374,28 @@ int main(int argc, char* argv[])
 	matBovenkaak = new cMaterial();
 	matBovenkaak->setWhite();
 	bovenkaak->setMaterial(*matBovenkaak);
-
-    // load an object file
-    bool fileload;
-    fileload = onderkaak->loadFromFile2(RESOURCE_PATH("../resources/models/kaken/mandibulary_export_Brecht Beckers.stl"));
-    if (!fileload)
-    {
-        #if defined(_MSVC)
-        fileload = onderkaak->loadFromFile2("../../../bin/resources/models/kaken/mandibulary_export_Brecht Beckers.stl");
-        #endif
-    }
-    if (!fileload)
-    {
-        cout << "Error - Onderkaak kon niet geladen worden." << endl;
-        close();
-        return (-1);
-    }
+	// load an object file
+	bool fileload;
+	fileload = onderkaak->loadFromFile2(RESOURCE_PATH("../resources/models/kaken/mandibulary_export_Brecht Beckers.stl"));
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload = onderkaak->loadFromFile2("../../../bin/resources/models/kaken/mandibulary_export_Brecht Beckers.stl");
+#endif
+	}
+	if (!fileload)
+	{
+		cout << "Error - Onderkaak kon niet geladen worden." << endl;
+		close();
+		return (-1);
+	}
 
 	fileload = bovenkaak->loadFromFile2(RESOURCE_PATH("../resources/models/kaken/maxillary_export_Brecht Beckers.stl"));
 	if (!fileload)
 	{
-		#if defined(_MSVC)
+#if defined(_MSVC)
 		fileload = bovenkaak->loadFromFile2("../../../bin/resources/models/kaken/maxillary_export_Brecht Beckers.stl");
-		#endif
+#endif
 	}
 	if (!fileload)
 	{
@@ -406,9 +407,9 @@ int main(int argc, char* argv[])
 	fileload = bolleke->loadFromFile2(RESOURCE_PATH("../resources/models/bol.stl"));
 	if (!fileload)
 	{
-	#if defined(_MSVC)
+#if defined(_MSVC)
 		fileload = bolleke->loadFromFile2("../../../bin/resources/models/bol.stl");
-	#endif
+#endif
 	}
 	if (!fileload)
 	{
@@ -418,20 +419,19 @@ int main(int argc, char* argv[])
 	}
 
 	bolleke->setWireMode(true);
-
-    // disable culling so that faces are rendered on both sides
+	// disable culling so that faces are rendered on both sides
 	onderkaak->setUseCulling(true);
 	bovenkaak->setUseCulling(true);
 
-    // get dimensions of object
+	// get dimensions of object
 	onderkaak->computeBoundaryBox(true);
-    double size = cSub(onderkaak->getBoundaryMax(), onderkaak->getBoundaryMin()).length();
+	double size = cSub(onderkaak->getBoundaryMax(), onderkaak->getBoundaryMin()).length();
 
-    // resize object to screen
-    if (size > 0.001)
-    {
+	// resize object to screen
+	if (size > 0.001)
+	{
 		//onderkaak->scale(1.0 / size);
-    }
+	}
 
 	bovenkaak->computeBoundaryBox(true);
 	size = cSub(bovenkaak->getBoundaryMax(), bovenkaak->getBoundaryMin()).length();
@@ -444,41 +444,39 @@ int main(int argc, char* argv[])
 	size = cSub(bolleke->getBoundaryMax(), bolleke->getBoundaryMin()).length();
 
 	if (size > 0.001) {
-		//bolleke->scale(0.1 / size);
+		bolleke->scale(5);
 	}
-	
 	cColorf color;
 	color.setOrangeTomato();
 
 	for (unsigned int i = 0; i < bolleke->getNumVertices(); i++) {
 		bolleke->m_vertices->setColor(i, color);
 	}
-
-    // show/hide boundary box
+	// show/hide boundary box
 	onderkaak->setShowBoundaryBox(false);
 	bovenkaak->setShowBoundaryBox(false);
 
-    // compute collision detection algorithm
+	// compute collision detection algorithm
 	onderkaak->createAABBCollisionDetector(0.0001);
 	bovenkaak->createAABBCollisionDetector(0.0001);
 
-    // enable display list for faster graphic rendering
+	// enable display list for faster graphic rendering
 	onderkaak->setUseDisplayList(true);
 	bovenkaak->setUseDisplayList(true);
 
-    // center object in scene
+	// center object in scene
 	/*onderkaak->setLocalPos(bovenkaak->getBoundaryCenter());
 	bovenkaak->setLocalPos(onderkaak->getBoundaryCenter());*/
 
 	onderkaak->setLocalPos(cVector3d(0, 0, 0));
 
-    // rotate object in scene
+	// rotate object in scene
 	//onderkaak->rotateExtrinsicEulerAnglesDeg(-90, 0, -90, C_EULER_ORDER_XYZ);
 	//bovenkaak->rotateExtrinsicEulerAnglesDeg(-90, 0, -90, C_EULER_ORDER_XYZ);
 	onderkaak->rotateExtrinsicEulerAnglesDeg(0, 0, 0, C_EULER_ORDER_XYZ);
 	bovenkaak->rotateExtrinsicEulerAnglesDeg(0, 0, 0, C_EULER_ORDER_XYZ);
 
-    // display options
+	// display options
 	onderkaak->setShowTriangles(true);
 	bovenkaak->setShowTriangles(true);
 
@@ -497,10 +495,9 @@ int main(int argc, char* argv[])
 
 	//istOnderkaak->printAABBCollisionTree(5);
 	//saveIST(istOnderkaak, "Onderkaak75_6");
+	istOnderkaak = loadIST("Onderkaak");
 
-	//istOnderkaak = loadIST("Onderkaak");
-
-	//onderkaak->setCollisionDetector(istOnderkaak);
+	onderkaak->setCollisionDetector(istOnderkaak);
 	// Bouw van innerspheretree van de onderkaak is klaar.
 
 	// Bouw de innerspheretree van de bovenkaak
@@ -518,11 +515,10 @@ int main(int argc, char* argv[])
 	////istBovenkaak->printAABBCollisionTree(5);
 	//saveIST(istBovenkaak, "Bovenkaak75_6");
 
-	////istBovenkaak = loadIST("Bovenkaak");
-	////istBovenkaak->printAABBCollisionTree(5);
+	istBovenkaak = loadIST("Bovenkaak");
+	//istBovenkaak->printAABBCollisionTree(5);
 
-	//istBovenkaak = loadIST("Bovenkaak");
-	//bovenkaak->setCollisionDetector(istBovenkaak);
+	bovenkaak->setCollisionDetector(istBovenkaak);
 
 	//set kleur collision detectors for rendering
 	colorOnderkaak.setGreenForest();
@@ -533,104 +529,105 @@ int main(int argc, char* argv[])
 	// Bouw van de innerspheretree van de bovenkaak is klaar.
 
 
-    //--------------------------------------------------------------------------
-    // WIDGETS
-    //--------------------------------------------------------------------------
+	//--------------------------------------------------------------------------
+	// WIDGETS
+	//--------------------------------------------------------------------------
 
-    // create a font
-    font = NEW_CFONTCALIBRI32();
-    
-    // create a label to display the haptic and graphic rate of the simulation en of de broadphase raakt.
-    labelRates = new cLabel(font);
+	// create a font
+	font = NEW_CFONTCALIBRI32();
+
+	// create a label to display the haptic and graphic rate of the simulation en of de broadphase raakt.
+	labelRates = new cLabel(font);
 	labelRaakt = new cLabel(font);
 
 	labelRates->m_fontColor.setRedSalmon();
 	labelRaakt->m_fontColor.setRedSalmon();
 
 	camera->m_frontLayer->addChild(labelRaakt);
-    camera->m_frontLayer->addChild(labelRates);
+	camera->m_frontLayer->addChild(labelRates);
 
 	labelRaakt->setText("Raakt");
 
-    //--------------------------------------------------------------------------
-    // START SIMULATION
-    //--------------------------------------------------------------------------
+	//--------------------------------------------------------------------------
+	// START SIMULATION
+	//--------------------------------------------------------------------------
 
-    // create a thread which starts the main haptics rendering loop
-    hapticsThread = new cThread();
-    hapticsThread->start(updateHaptics, CTHREAD_PRIORITY_HAPTICS);
+	// create a thread which starts the main haptics rendering loop
+	hapticsThread = new cThread();
+	hapticsThread->start(updateHaptics, CTHREAD_PRIORITY_HAPTICS);
 
-    // setup callback when application exits
-    atexit(close);
+	// setup callback when application exits
+	atexit(close);
 
 
-    //--------------------------------------------------------------------------
-    // MAIN GRAPHIC LOOP
-    //--------------------------------------------------------------------------
+	//--------------------------------------------------------------------------
+	// MAIN GRAPHIC LOOP
+	//--------------------------------------------------------------------------
 
-    // call window size callback at initialization
-    windowSizeCallback(window, width, height);
+	// call window size callback at initialization
+	windowSizeCallback(window, width, height);
 
-    // main graphic loop
-    while (!glfwWindowShouldClose(window))
-    {
-        // get width and height of window
-        glfwGetWindowSize(window, &width, &height);
+	// main graphic loop
+	while (!glfwWindowShouldClose(window))
+	{
+		// get width and height of window
+		glfwGetWindowSize(window, &width, &height);
 
-        // render graphics
-        updateGraphics();
+		// render graphics
+		updateGraphics();
 
-        // swap buffers
-        glfwSwapBuffers(window);
+		// swap buffers
+		glfwSwapBuffers(window);
 
-        // process events
-        glfwPollEvents();
+		// process events
+		glfwPollEvents();
 
-        // signal frequency counter
-        freqCounterGraphics.signal(1);
-    }
+		// signal frequency counter
+		freqCounterGraphics.signal(1);
+	}
 
-    // close window
-    glfwDestroyWindow(window);
+	// close window
+	glfwDestroyWindow(window);
 
-    // terminate GLFW library
-    glfwTerminate();
+	// terminate GLFW library
+	glfwTerminate();
 
-    // exit
-    return 0;
+	// exit
+	return 0;
 }
 
 //------------------------------------------------------------------------------
 
 void windowSizeCallback(GLFWwindow* a_window, int a_width, int a_height)
 {
-    // update window size
-    width  = a_width;
-    height = a_height;
+	// update window size
+	width = a_width;
+	height = a_height;
 }
 
 //------------------------------------------------------------------------------
 
 void errorCallback(int a_error, const char* a_description)
 {
-    cout << "Error: " << a_description << endl;
+	cout << "Error: " << a_description << endl;
 }
 
 //------------------------------------------------------------------------------
 
 void keyCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, int a_mods)
 {
-    // filter calls that only include a key press
-    if ((a_action != GLFW_PRESS) && (a_action != GLFW_REPEAT))
-    {
-        return;
-    }
 
-    // option - exit
-    else if ((a_key == GLFW_KEY_Q))
-    {
-        glfwSetWindowShouldClose(a_window, GLFW_TRUE);
-    }
+	// filter calls that only include a key press
+	if ((a_action != GLFW_PRESS) && (a_action != GLFW_REPEAT))
+	{
+		return;
+	}
+
+	// option - exit
+	else if ((a_key == GLFW_KEY_Q))
+	{
+		glfwSetWindowShouldClose(a_window, GLFW_TRUE);
+	}
 
 	else if ((a_key == GLFW_KEY_ESCAPE)) {
 		// toggle state variable
@@ -659,93 +656,92 @@ void keyCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, 
 		}
 	}
 
-    // option - enable/disable wire mode
-    else if (a_key == GLFW_KEY_2)
-    {
-        bool useWireMode = onderkaak->getWireMode();
+	// option - enable/disable wire mode
+	else if (a_key == GLFW_KEY_2)
+	{
+		bool useWireMode = onderkaak->getWireMode();
 		onderkaak->setWireMode(!useWireMode, true);
 		bovenkaak->setWireMode(!useWireMode, true);
-    }
+	}
 
-    // option - show/hide collision detection tree
-    else if (a_key == GLFW_KEY_3)
-    {
+	// option - show/hide collision detection tree
+	else if (a_key == GLFW_KEY_3)
+	{
 		//onderkaak->setCollisionDetectorProperties(collisionTreeDisplayLevelOnderkaak, color, true);
 		//bovenkaak->setCollisionDetectorProperties(collisionTreeDisplayLevelBovenkaak, color, true);
-        bool show = onderkaak->getShowCollisionDetector();
+		bool show = onderkaak->getShowCollisionDetector();
 		onderkaak->setShowCollisionDetector(!show, true);
 		bovenkaak->setShowCollisionDetector(!show, true);
 		//doorloopBoxes();
-    }
+	}
 
-    // option - decrease depth level of collision tree
-    else if (a_key == GLFW_KEY_4)
-    {
-        collisionTreeDisplayLevelOnderkaak--;
+	// option - decrease depth level of collision tree
+	else if (a_key == GLFW_KEY_4)
+	{
+		collisionTreeDisplayLevelOnderkaak--;
 		collisionTreeDisplayLevelBovenkaak--;
-        if (collisionTreeDisplayLevelOnderkaak < 0) { collisionTreeDisplayLevelOnderkaak = 0; }
+		if (collisionTreeDisplayLevelOnderkaak < 0) { collisionTreeDisplayLevelOnderkaak = 0; }
 		if (collisionTreeDisplayLevelBovenkaak < 0) { collisionTreeDisplayLevelBovenkaak = 0; }
 		onderkaak->setCollisionDetectorProperties(collisionTreeDisplayLevelOnderkaak, colorOnderkaak, true);
 		onderkaak->setShowCollisionDetector(true, true);
 
 		bovenkaak->setCollisionDetectorProperties(collisionTreeDisplayLevelBovenkaak, colorBovenkaak, true);
 		bovenkaak->setShowCollisionDetector(true, true);
-    }
+	}
 
-    // option - increase depth level of collision tree
-    else if (a_key == GLFW_KEY_5)
-    {
-        collisionTreeDisplayLevelOnderkaak++;
+	// option - increase depth level of collision tree
+	else if (a_key == GLFW_KEY_5)
+	{
+		collisionTreeDisplayLevelOnderkaak++;
 		collisionTreeDisplayLevelBovenkaak++;
 		onderkaak->setCollisionDetectorProperties(collisionTreeDisplayLevelOnderkaak, colorOnderkaak, true);
 		onderkaak->setShowCollisionDetector(true, true);
 
 		bovenkaak->setCollisionDetectorProperties(collisionTreeDisplayLevelBovenkaak, colorBovenkaak, true);
 		bovenkaak->setShowCollisionDetector(true, true);
-    }
+	}
 
-    // option - show/hide triangles
-    else if (a_key == GLFW_KEY_T)
-    {
-        showTriangles = !showTriangles;
+	// option - show/hide triangles
+	else if (a_key == GLFW_KEY_T)
+	{
+		showTriangles = !showTriangles;
 		onderkaak->setShowTriangles(showTriangles);
 		bovenkaak->setShowTriangles(showTriangles);
-    }
+	}
 
-    // option - toggle fullscreen
-    else if (a_key == GLFW_KEY_F)
-    {
-        // toggle state variable
-        fullscreen = !fullscreen;
+	// option - toggle fullscreen
+	else if (a_key == GLFW_KEY_F)
+	{
+		// toggle state variable
+		fullscreen = !fullscreen;
 
-        // get handle to monitor
-        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+		// get handle to monitor
+		GLFWmonitor* monitor = glfwGetPrimaryMonitor();
 
-        // get information about monitor
-        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+		// get information about monitor
+		const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 
-        // set fullscreen or window mode
-        if (fullscreen)
-        {
-            glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
-            glfwSwapInterval(swapInterval);
-        }
-        else
-        {
-            int w = 0.8 * mode->height;
-            int h = 0.5 * mode->height;
-            int x = 0.5 * (mode->width - w);
-            int y = 0.5 * (mode->height - h);
-            glfwSetWindowMonitor(window, NULL, x, y, w, h, mode->refreshRate);
-            glfwSwapInterval(swapInterval);
-        }
-    }
+		// set fullscreen or window mode
+		if (fullscreen)
+		{
+			glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+			glfwSwapInterval(swapInterval);
+		}
+		else
+		{
+			int w = 0.8 * mode->height;
+			int h = 0.5 * mode->height;
+			int x = 0.5 * (mode->width - w);
+			int y = 0.5 * (mode->height - h);
+			glfwSetWindowMonitor(window, NULL, x, y, w, h, mode->refreshRate);
+			glfwSwapInterval(swapInterval);
+		}
+	}
 
 	// Beweeg bovenkaak
 	else if (a_key == GLFW_KEY_RIGHT) {
 		bovenkaak->setLocalPos(cVector3d(bovenkaak->getLocalPos().x(),
 			bovenkaak->getLocalPos().y() + 1,
-			
 			bovenkaak->getLocalPos().z())
 		);
 
@@ -761,19 +757,49 @@ void keyCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, 
 	else if (a_key == GLFW_KEY_UP) {
 		bovenkaak->setLocalPos(cVector3d(bovenkaak->getLocalPos().x(),
 			bovenkaak->getLocalPos().y(),
-			bovenkaak->getLocalPos().z()+1)
+			bovenkaak->getLocalPos().z() + 1)
 		);
-		gelopenAfstand->add(0, 0, 1);
+		gelopenAfstand->sub(1, 0, 0);
 	}
 	else if (a_key == GLFW_KEY_DOWN) {
 		bovenkaak->setLocalPos(cVector3d(bovenkaak->getLocalPos().x(),
 			bovenkaak->getLocalPos().y(),
 			bovenkaak->getLocalPos().z() - 1)
 		);
-		gelopenAfstand->sub(0, 0, 1);
+		gelopenAfstand->add(1, 0, 0);
+	}
+	else if (a_key == GLFW_KEY_X) {
+		draaiAs.set(1, 0, 0);
+	}
+	else if (a_key == GLFW_KEY_Y) {
+		draaiAs.set(0, 1, 0);
+	}
+	else if (a_key == GLFW_KEY_Z) {
+		draaiAs.set(0, 0, 1);
 	}
 
-	if(istBovenkaak != nullptr) istBovenkaak->setPosition(-(bovenkaak->getLocalPos()));
+	if (a_key == GLFW_KEY_O) {
+		selectedObject = onderkaak;
+	}
+	else if (a_key == GLFW_KEY_B) {
+		selectedObject = bovenkaak;
+	}
+
+	if (selectedObject == onderkaak) {
+		onderkaak->m_material->setBlue();
+	}
+	else {
+		onderkaak->m_material->setWhite();
+	}
+
+	if (selectedObject == bovenkaak) {
+		bovenkaak->m_material->setBlue();
+	}
+	else {
+		bovenkaak->m_material->setWhite();
+	}
+
+	if (istBovenkaak != nullptr) istBovenkaak->setPosition(-(bovenkaak->getLocalPos()));
 	wilupdaten = true;
 }
 
@@ -783,14 +809,13 @@ void keyCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, 
 
 void mouseMotionCallback(GLFWwindow* a_window, double a_posX, double a_posY)
 {
+	// compute mouse motion
+	int dx = a_posX - mouseX;
+	int dy = a_posY - mouseY;
+	mouseX = a_posX;
+	mouseY = a_posY;
 	if (mouseState == MOUSE_MOVE_CAMERA)
 	{
-		// compute mouse motion
-		int dx = a_posX - mouseX;
-		int dy = a_posY - mouseY;
-		mouseX = a_posX;
-		mouseY = a_posY;
-
 		// compute new camera angles
 		double azimuthDeg = camera->getSphericalAzimuthDeg() - 0.5 * dx;
 		double polarDeg = camera->getSphericalPolarDeg() - 0.5 * dy;
@@ -829,43 +854,60 @@ void mouseMotionCallback(GLFWwindow* a_window, double a_posX, double a_posY)
 		cVector3d posObject = pos - selectedObjectOffset;
 
 		// apply new position to object
+		cVector3d verschil = selectedObject->getLocalPos() - posObject;
 		selectedObject->setLocalPos(posObject);
+		if (selectedObject == bovenkaak) {
+			gelopenAfstand->add(verschil);
+			istBovenkaak->setPosition(-(bovenkaak->getLocalPos()));
+			wilupdaten = true;
+		}
+		else {
+			gelopenAfstand->sub(verschil);
+			istOnderkaak->setPosition(-(onderkaak->getLocalPos()));
+			wilupdaten = true;
+		}
 	}
 	else if ((selectedObject != NULL) && (mouseState == MOUSE_SELECTION_ROTATE))
 	{
-		// get the vector that goes from the camera to the selected point (mouse click)
-		cVector3d vCameraObject = selectedPoint - camera->getLocalPos();
-
-		// get the vector that point in the direction of the camera. ("where the camera is looking at")
-		cVector3d vCameraLookAt = camera->getLookVector();
-
-		// compute the angle between both vectors
-		double angle = cAngle(vCameraObject, vCameraLookAt);
-
-		// compute the distance between the camera and the plane that intersects the object and 
-		// which is parallel to the camera plane
-		double distanceToObjectPlane = vCameraObject.length() * cos(angle);
-
-		// convert the pixel in mouse space into a relative position in the world
-		double factor = (distanceToObjectPlane * tan(0.5 * camera->getFieldViewAngleRad())) / (0.5 * height);
-		double posRelX = factor * (a_posX - (0.5 * width));
-		double posRelY = factor * ((height - a_posY) - (0.5 * height));
-
-		// compute the new position in world coordinates
-		cVector3d pos = camera->getLocalPos() +
-			distanceToObjectPlane * camera->getLookVector() +
-			posRelX * camera->getRightVector() +
-			posRelY * camera->getUpVector();
-
-		cVector3d rotAxis = cVector3d(-1.0/pos.x(),-1.0/pos.y(),-1.0/pos.z());
-
-		// compute position of object by taking in account offset
-		cVector3d posObject = pos - selectedObjectOffset;
-
-		// apply new position to object
 		cMatrix3d rot = selectedObject->getLocalRot();
-		rot.setAxisAngleRotationDeg(rotAxis,1);
+		rot.rotateAboutGlobalAxisDeg(draaiAs, dx);
 		selectedObject->setLocalRot(rot);
+
+		//// get the vector that goes from the camera to the selected point (mouse click)
+		//cVector3d vCameraObject = selectedPoint - camera->getLocalPos();
+
+		//// get the vector that point in the direction of the camera. ("where the camera is looking at")
+		//cVector3d vCameraLookAt = camera->getLookVector();
+
+		//// compute the angle between both vectors
+		//double angle = cAngle(vCameraObject, vCameraLookAt);
+
+		//// compute the distance between the camera and the plane that intersects the object and 
+		//// which is parallel to the camera plane
+		//double distanceToObjectPlane = vCameraObject.length() * cos(angle);
+
+		//// convert the pixel in mouse space into a relative position in the world
+		//double factor = (distanceToObjectPlane * tan(0.5 * camera->getFieldViewAngleRad())) / (0.5 * height);
+		//double posRelX = factor * (a_posX - (0.5 * width));
+		//double posRelY = factor * ((height - a_posY) - (0.5 * height));
+
+		//// compute the new position in world coordinates
+		//cVector3d pos = camera->getLocalPos() +
+		//	distanceToObjectPlane * camera->getLookVector() +
+		//	posRelX * camera->getRightVector() +
+		//	posRelY * camera->getUpVector();
+
+		//cVector3d rotAxis = cVector3d(-1.0 / pos.x(), -1.0 / pos.y(), -1.0 / pos.z());
+
+		//// compute position of object by taking in account offset
+		//cVector3d posObject = pos - selectedObjectOffset;
+
+		//// apply new position to object
+		//cMatrix3d rot = selectedObject->getLocalRot();
+		////rot.setAxisAngleRotationDeg(cVector3d(0,1,0), rot.);
+		//rot.rotateAboutGlobalAxisDeg(cVector3d(1, 0, 0), 1);
+		//selectedObject->setLocalRot(rot);
+
 	}
 }
 
@@ -896,16 +938,20 @@ void mouseButtonCallback(GLFWwindow* a_window, int a_button, int a_action, int a
 		// variable for storing collision information
 		cCollisionRecorder recorder;
 		cCollisionSettings settings;
-		
+
+		if (a_button == GLFW_MOUSE_BUTTON_LEFT) mouseState = MOUSE_SELECTION_TRANSLATE;
+		else  mouseState = MOUSE_SELECTION_ROTATE;
+
 		// detect for any collision between mouse and world
-		bool hit = camera->selectWorld(mouseX, (height - mouseY), width, height, recorder, settings);
+		//bool hit = camera->selectWorld(mouseX, (height - mouseY), width, height, recorder, settings);
+		bool hit = false;
 		if (hit)
 		{
-			selectedPoint = recorder.m_nearestCollision.m_globalPos;
+			/*selectedPoint = recorder.m_nearestCollision.m_globalPos;
 			selectedObject = recorder.m_nearestCollision.m_object;
 			selectedObjectOffset = recorder.m_nearestCollision.m_globalPos - selectedObject->getLocalPos();
 			if (selectedObject != NULL) {
-				if(a_button == GLFW_MOUSE_BUTTON_LEFT) mouseState = MOUSE_SELECTION_TRANSLATE;
+				if (a_button == GLFW_MOUSE_BUTTON_LEFT) mouseState = MOUSE_SELECTION_TRANSLATE;
 				else  mouseState = MOUSE_SELECTION_ROTATE;
 			}
 
@@ -915,13 +961,11 @@ void mouseButtonCallback(GLFWwindow* a_window, int a_button, int a_action, int a
 
 			if (selectedObject == bovenkaak) {
 				bovenkaak->m_material->setBlue();
-			}
+			}*/
 		}
 	}
 	else
 	{
-		onderkaak->m_material->setWhite();
-		bovenkaak->m_material->setWhite();
 		mouseState = MOUSE_IDLE;
 	}
 }
@@ -930,105 +974,107 @@ void mouseButtonCallback(GLFWwindow* a_window, int a_button, int a_action, int a
 
 //void mouseMotionCallback(GLFWwindow* a_window, double a_posX, double a_posY)
 //{
-//	if ((selectedObject != NULL) && (mouseState == MOUSE_SELECTION))
+//	if ((selectedObject != NULL) && (mouseState == MOUSE_SELECTION_ROTATE))
 //	{
-//		// get the vector that goes from the camera to the selected point (mouse click)
-//		cVector3d vCameraObject = selectedPoint - camera->getLocalPos();
+////		// get the vector that goes from the camera to the selected point (mouse click)
+////		cVector3d vCameraObject = selectedPoint - camera->getLocalPos();
+////
+////		// get the vector that point in the direction of the camera. ("where the camera is looking at")
+////		cVector3d vCameraLookAt = camera->getLookVector();
+////
+////		// compute the angle between both vectors
+////		double angle = cAngle(vCameraObject, vCameraLookAt);
+////
+////		// compute the distance between the camera and the plane that intersects the object and 
+////		// which is parallel to the camera plane
+////		double distanceToObjectPlane = vCameraObject.length() * cos(angle);
+////
+////		// convert the pixel in mouse space into a relative position in the world
+////		double factor = (distanceToObjectPlane * tan(0.5 * camera->getFieldViewAngleRad())) / (0.5 * height);
+////		double posRelX = factor * (a_posX - (0.5 * width));
+////		double posRelY = factor * ((height - a_posY) - (0.5 * height));
+////
+////		// compute the new position in world coordinates
+////		cVector3d pos = camera->getLocalPos() +
+////			distanceToObjectPlane * camera->getLookVector() +
+////			posRelX * camera->getRightVector() +
+////			posRelY * camera->getUpVector();
+////
+////		// compute position of object by taking in account offset
+////		cVector3d posObject = pos - selectedObjectOffset;
+////
+////		// apply new position to object
+////		selectedObject->setLocalPos(posObject);
+////
+////		// place cursor at the position of the mouse click
+////		sphereSelect->setLocalPos(pos);
 //
-//		// get the vector that point in the direction of the camera. ("where the camera is looking at")
-//		cVector3d vCameraLookAt = camera->getLookVector();
-//
-//		// compute the angle between both vectors
-//		double angle = cAngle(vCameraObject, vCameraLookAt);
-//
-//		// compute the distance between the camera and the plane that intersects the object and 
-//		// which is parallel to the camera plane
-//		double distanceToObjectPlane = vCameraObject.length() * cos(angle);
-//
-//		// convert the pixel in mouse space into a relative position in the world
-//		double factor = (distanceToObjectPlane * tan(0.5 * camera->getFieldViewAngleRad())) / (0.5 * height);
-//		double posRelX = factor * (a_posX - (0.5 * width));
-//		double posRelY = factor * ((height - a_posY) - (0.5 * height));
-//
-//		// compute the new position in world coordinates
-//		cVector3d pos = camera->getLocalPos() +
-//			distanceToObjectPlane * camera->getLookVector() +
-//			posRelX * camera->getRightVector() +
-//			posRelY * camera->getUpVector();
-//
-//		// compute position of object by taking in account offset
-//		cVector3d posObject = pos - selectedObjectOffset;
-//
-//		// apply new position to object
-//		selectedObject->setLocalPos(posObject);
-//
-//		// place cursor at the position of the mouse click
-//		sphereSelect->setLocalPos(pos);
+//		if()
 //	}
 //}
 
 void close(void)
 {
-    // stop the simulation
-    simulationRunning = false;
+	// stop the simulation
+	simulationRunning = false;
 
-    // wait for graphics and haptics loops to terminate
-    while (!simulationFinished) { cSleepMs(100); }
+	// wait for graphics and haptics loops to terminate
+	while (!simulationFinished) { cSleepMs(100); }
 
-    // delete resources
-    delete hapticsThread;
-    delete world;
+	// delete resources
+	delete hapticsThread;
+	delete world;
 }
 
 //------------------------------------------------------------------------------
 
 void updateGraphics(void)
 {
-    /////////////////////////////////////////////////////////////////////
-    // UPDATE WIDGETS
-    /////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////
+	// UPDATE WIDGETS
+	/////////////////////////////////////////////////////////////////////
 
-    // update haptic and graphic rate data
-    labelRates->setText(cStr(freqCounterGraphics.getFrequency(), 0) + " Hz / " +
-        cStr(freqCounterHaptics.getFrequency(), 0) + " Hz");
+	// update haptic and graphic rate data
+	labelRates->setText(cStr(freqCounterGraphics.getFrequency(), 0) + " Hz / " +
+		cStr(freqCounterHaptics.getFrequency(), 0) + " Hz");
 
-    // update position of label
-    labelRates->setLocalPos((int)(0.5 * (width - labelRates->getWidth())), 15);
+	// update position of label
+	labelRates->setLocalPos((int)(0.5 * (width - labelRates->getWidth())), 15);
 
 
-    /////////////////////////////////////////////////////////////////////
-    // RENDER SCENE
-    /////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////
+	// RENDER SCENE
+	/////////////////////////////////////////////////////////////////////
 
-    // render world
-    camera->renderView(width, height);
+	// render world
+	camera->renderView(width, height);
 
-    // wait until all GL commands are completed
-    glFinish();
+	// wait until all GL commands are completed
+	glFinish();
 
-    // check for any OpenGL errors
-    GLenum err = glGetError();
-    if (err != GL_NO_ERROR) cout << "Error: " << gluErrorString(err) << endl;
+	// check for any OpenGL errors
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR) cout << "Error: " << gluErrorString(err) << endl;
 }
 
 //------------------------------------------------------------------------------
 
 enum cMode
 {
-    IDLE,
-    SELECTION
+	IDLE,
+	SELECTION
 };
 
 void updateHaptics(void)
 {
-    cMode state = IDLE;
-    cTransform tool_T_object;
+	cMode state = IDLE;
+	cTransform tool_T_object;
 
-    // simulation in now running
-    simulationRunning  = true;
-    simulationFinished = false;
+	// simulation in now running
+	simulationRunning = true;
+	simulationFinished = false;
 
-    // main haptic simulation loop
+	// main haptic simulation loop
 	bool hulp = true;
 	while (simulationRunning)
 	{
@@ -1052,55 +1098,49 @@ void updateHaptics(void)
 		cVector3d onderkaakBoundaryMin = onderkaak->getBoundaryMin() + onderkaak->getLocalPos();*/
 
 		/*if ((onderkaakBoundaryMax.y() > bovenkaakBoundaryMin.y())
-			&&(onderkaakBoundaryMin.y() < bovenkaakBoundaryMax.y())) {
-
-			if ((onderkaakBoundaryMax.x() > bovenkaakBoundaryMin.x())
-				&& (onderkaakBoundaryMin.x() < bovenkaakBoundaryMax.x())) {
-
-				if ((onderkaakBoundaryMax.z() > bovenkaakBoundaryMin.z())
-					&& (onderkaakBoundaryMin.z() < bovenkaakBoundaryMax.z())) {
-
-					hit = true;
-				}
-			}
+		&&(onderkaakBoundaryMin.y() < bovenkaakBoundaryMax.y())) {
+		if ((onderkaakBoundaryMax.x() > bovenkaakBoundaryMin.x())
+		&& (onderkaakBoundaryMin.x() < bovenkaakBoundaryMax.x())) {
+		if ((onderkaakBoundaryMax.z() > bovenkaakBoundaryMin.z())
+		&& (onderkaakBoundaryMin.z() < bovenkaakBoundaryMax.z())) {
+		hit = true;
+		}
+		}
 		}*/
 
 		bool accuraatRaakt = false;
 		bool kijken = false;
 		if ((abs(gelopenAfstand->length()) >= minimumTeLopen)) kijken = true;
-
+		
 		if (kijken) {
-		double dist = 0;
-		accuraatRaakt = world->computeCollision(onderkaak, bovenkaak, traversalSetting::DISTANCE, dist, 50, *positie);
-		bolleke->setLocalPos((*positie));
+			double dist = 0;
+			accuraatRaakt = world->computeCollision(onderkaak, bovenkaak, traversalSetting::BACKWARDTRACK, dist, 50, *positie);
+			bolleke->setLocalPos((*positie));
 
-		minimumTeLopen = (float)dist;
-		gelopenAfstand->zero();
-		hulp = false;
+			minimumTeLopen = (float)dist;
+			gelopenAfstand->zero();
+			hulp = false;
 		}
 
 		if (!accuraatRaakt) labelRaakt->m_fontColor.setA(0);
 		else labelRaakt->m_fontColor.setA(1);
 
 		//int diepte = cMultiMesh::checkRaakt(onderkaak, bovenkaak, 1);
-		
 		//cout << diepte << endl;
 
 		/*cout << "DATA" << endl;
 		cout << "IST1: " << istOnderkaak->getRootSphere()->getPosition() << " : " << istOnderkaak->getRootSphere()->getRadius() << endl;
 		cout << "IST1: " << istBovenkaak->getRootSphere()->getPosition() << " : " << istBovenkaak->getRootSphere()->getRadius() << endl;
-
 		cout << istOnderkaak->getRootSphere()->distance(istBovenkaak->getRootSphere(), cVector3d(0,0,0), cVector3d(0,0,0)) << " afstand tussen roots" << endl << endl;*/
 
 		if (wilupdaten) {
 			//bovenkaak->getCollisionDetector()->update();
 			wilupdaten = false;
 		}
+	}
 
-    }
-    
-    // exit haptics thread
-    simulationFinished = true;
+	// exit haptics thread
+	simulationFinished = true;
 }
 
 //////////////////////////////////////////////////////////////////////////
