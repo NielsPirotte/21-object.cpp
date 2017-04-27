@@ -480,7 +480,7 @@ int main(int argc, char* argv[])
 	onderkaak->setShowTriangles(true);
 	bovenkaak->setShowTriangles(true);
 
-	onderkaak->createAABBCollisionDetector(0.01);
+	//onderkaak->createAABBCollisionDetector(0.01);
 	// Bouw de innerspheretree op van de onderkaak.
 	//Voxelizer* voxelizerOnderkaak = new Voxelizer();
 	//cCollisionAABB* colliderOnderkaak = dynamic_cast<cCollisionAABB*>(onderkaak->getCollisionDetector());
@@ -1122,7 +1122,13 @@ void updateHaptics(void)
 		
 		if (kijken) {
 			double dist = 0;
-			accuraatRaakt = world->computeCollision(onderkaak, bovenkaak, traversalSetting::BACKWARDTRACK, dist, 50, *positie);
+			accuraatRaakt = world->computeCollision(onderkaak, bovenkaak, traversalSetting::MULTIPOINT, dist, 50, *positie);
+
+			if (accuraatRaakt) {
+				for (int i = 0; i < InnerSphereTree::globalPath.getPositions().size(); i++) cout << " - pos " << i + 1 << " = " << InnerSphereTree::globalPath.getPositions()[i];
+				cout << endl;
+			}
+
 			bolleke->setLocalPos((*positie));
 
 			minimumTeLopen = (float)dist;
