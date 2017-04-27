@@ -480,25 +480,26 @@ int main(int argc, char* argv[])
 	onderkaak->setShowTriangles(true);
 	bovenkaak->setShowTriangles(true);
 
-	onderkaak->createAABBCollisionDetector(0.01);
-	// Bouw de innerspheretree op van de onderkaak.
+	//onderkaak->createAABBCollisionDetector(0.01);
+	//// Bouw de innerspheretree op van de onderkaak.
 	//Voxelizer* voxelizerOnderkaak = new Voxelizer();
 	//cCollisionAABB* colliderOnderkaak = dynamic_cast<cCollisionAABB*>(onderkaak->getCollisionDetector());
-	//cout << "test: " << *(test->getTriangles()[0].p1) << endl;
+	////cout << "test: " << *(test->getTriangles()[0].p1) << endl;
 	//voxelizerOnderkaak->setObject(colliderOnderkaak);
 	//voxelizerOnderkaak->setPositie(cVector3d(0,0,0));
 	//voxelizerOnderkaak->setAccuraatheid(10);
 	//voxelizerOnderkaak->initialize();
 
-	//istOnderkaak = voxelizerOnderkaak->buildInnerTree(6, onderkaak->getLocalPos(), (onderkaak->getBoundaryMax()-onderkaak->getBoundaryMin()).length());
+	//istOnderkaak = voxelizerOnderkaak->buildInnerTree(3, onderkaak->getLocalPos(), (onderkaak->getBoundaryMax()-onderkaak->getBoundaryMin()).length());
+	////voxelizerOnderkaak->mapClosestTriangles();
 	//delete voxelizerOnderkaak;
 
-	//istOnderkaak->printAABBCollisionTree(5);
-	//saveIST(istOnderkaak, "Onderkaak75_6");
+	////istOnderkaak->printAABBCollisionTree(5);
+	//saveIST(istOnderkaak, "Onderkaak75_8");
 	istOnderkaak = loadIST("Onderkaak");
 
 	onderkaak->setCollisionDetector(istOnderkaak);
-	// Bouw van innerspheretree van de onderkaak is klaar.
+	//// Bouw van innerspheretree van de onderkaak is klaar.
 
 	// Bouw de innerspheretree van de bovenkaak
 	//Voxelizer* voxelizerBovenkaak = new Voxelizer();
@@ -509,14 +510,14 @@ int main(int argc, char* argv[])
 	//voxelizerBovenkaak->setAccuraatheid(10);
 	//voxelizerBovenkaak->initialize();
 
-	//istBovenkaak = voxelizerBovenkaak->buildInnerTree(6, bovenkaak->getLocalPos(), (bovenkaak->getBoundaryMax() - bovenkaak->getBoundaryMin()).length());
+	//istBovenkaak = voxelizerBovenkaak->buildInnerTree(3, bovenkaak->getLocalPos(), (bovenkaak->getBoundaryMax() - bovenkaak->getBoundaryMin()).length());
+	////voxelizerBovenkaak->mapClosestTriangles();
 	//delete voxelizerBovenkaak;
 
 	////istBovenkaak->printAABBCollisionTree(5);
-	//saveIST(istBovenkaak, "Bovenkaak75_6");
+	//saveIST(istBovenkaak, "Bovenkaak75_8");
 
 	istBovenkaak = loadIST("Bovenkaak");
-	//istBovenkaak->printAABBCollisionTree(5);
 
 	bovenkaak->setCollisionDetector(istBovenkaak);
 
