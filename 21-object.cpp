@@ -480,42 +480,42 @@ int main(int argc, char* argv[])
 	onderkaak->setShowTriangles(true);
 	bovenkaak->setShowTriangles(true);
 
-	//onderkaak->createAABBCollisionDetector(0.01);
-	// Bouw de innerspheretree op van de onderkaak.
-	//Voxelizer* voxelizerOnderkaak = new Voxelizer();
-	//cCollisionAABB* colliderOnderkaak = dynamic_cast<cCollisionAABB*>(onderkaak->getCollisionDetector());
+	onderkaak->createAABBCollisionDetector(0.01);
+	//Bouw de innerspheretree op van de onderkaak.
+	Voxelizer* voxelizerOnderkaak = new Voxelizer();
+	cCollisionAABB* colliderOnderkaak = dynamic_cast<cCollisionAABB*>(onderkaak->getCollisionDetector());
 	//cout << "test: " << *(test->getTriangles()[0].p1) << endl;
-	//voxelizerOnderkaak->setObject(colliderOnderkaak);
-	//voxelizerOnderkaak->setPositie(cVector3d(0,0,0));
-	//voxelizerOnderkaak->setAccuraatheid(10);
-	//voxelizerOnderkaak->initialize();
+	voxelizerOnderkaak->setObject(colliderOnderkaak);
+	voxelizerOnderkaak->setPositie(cVector3d(0,0,0));
+	voxelizerOnderkaak->setAccuraatheid(75);
+	voxelizerOnderkaak->initialize();
 
-	//istOnderkaak = voxelizerOnderkaak->buildInnerTree(6, onderkaak->getLocalPos(), (onderkaak->getBoundaryMax()-onderkaak->getBoundaryMin()).length());
-	//delete voxelizerOnderkaak;
+	istOnderkaak = voxelizerOnderkaak->buildInnerTree(6, onderkaak->getLocalPos(), (onderkaak->getBoundaryMax()-onderkaak->getBoundaryMin()).length());
+	delete voxelizerOnderkaak;
 
 	//istOnderkaak->printAABBCollisionTree(5);
-	//saveIST(istOnderkaak, "Onderkaak75_6");
-	istOnderkaak = loadIST("Onderkaak");
+	saveIST(istOnderkaak, "Onderkaak_75_6");
+	//istOnderkaak = loadIST("Onderkaak");
 
 	onderkaak->setCollisionDetector(istOnderkaak);
 	// Bouw van innerspheretree van de onderkaak is klaar.
 
 	// Bouw de innerspheretree van de bovenkaak
-	//Voxelizer* voxelizerBovenkaak = new Voxelizer();
-	//cCollisionAABB* colliderBovenkaak = dynamic_cast<cCollisionAABB*>(bovenkaak->getCollisionDetector());
-	////cout << "test: " << *(test->getTriangles()[0].p1) << endl;
-	//voxelizerBovenkaak->setObject(colliderBovenkaak);
-	//voxelizerBovenkaak->setPositie(cVector3d(0,0,0));
-	//voxelizerBovenkaak->setAccuraatheid(10);
-	//voxelizerBovenkaak->initialize();
+	Voxelizer* voxelizerBovenkaak = new Voxelizer();
+	cCollisionAABB* colliderBovenkaak = dynamic_cast<cCollisionAABB*>(bovenkaak->getCollisionDetector());
+	//cout << "test: " << *(test->getTriangles()[0].p1) << endl;
+	voxelizerBovenkaak->setObject(colliderBovenkaak);
+	voxelizerBovenkaak->setPositie(cVector3d(0,0,0));
+	voxelizerBovenkaak->setAccuraatheid(75);
+	voxelizerBovenkaak->initialize();
 
-	//istBovenkaak = voxelizerBovenkaak->buildInnerTree(6, bovenkaak->getLocalPos(), (bovenkaak->getBoundaryMax() - bovenkaak->getBoundaryMin()).length());
-	//delete voxelizerBovenkaak;
+	istBovenkaak = voxelizerBovenkaak->buildInnerTree(6, bovenkaak->getLocalPos(), (bovenkaak->getBoundaryMax() - bovenkaak->getBoundaryMin()).length());
+	delete voxelizerBovenkaak;
 
 	////istBovenkaak->printAABBCollisionTree(5);
-	//saveIST(istBovenkaak, "Bovenkaak75_6");
+	saveIST(istBovenkaak, "Bovenkaak_75_6");
 
-	istBovenkaak = loadIST("Bovenkaak");
+	//istBovenkaak = loadIST("Bovenkaak");
 	//istBovenkaak->printAABBCollisionTree(5);
 
 	bovenkaak->setCollisionDetector(istBovenkaak);
@@ -664,6 +664,13 @@ void keyCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, 
 		bovenkaak->setWireMode(!useWireMode, true);
 	}
 
+	else if (a_key == GLFW_KEY_R) {
+		cMatrix3d rot = bovenkaak->getLocalRot();
+		rot.rotateAboutGlobalAxisDeg(cVector3d(1, 0, 0), 90);
+		bovenkaak->setLocalRot(rot);
+		istBovenkaak->setRotation(rot);
+	}
+
 	// option - show/hide collision detection tree
 	else if (a_key == GLFW_KEY_3)
 	{
@@ -741,32 +748,32 @@ void keyCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, 
 	// Beweeg bovenkaak
 	else if (a_key == GLFW_KEY_RIGHT) {
 		bovenkaak->setLocalPos(cVector3d(bovenkaak->getLocalPos().x(),
-			bovenkaak->getLocalPos().y() + 1,
+			bovenkaak->getLocalPos().y() + 10,
 			bovenkaak->getLocalPos().z())
 		);
 
-		gelopenAfstand->add(0, 1, 0);
+		gelopenAfstand->add(0, 10, 0);
 	}
 	else if (a_key == GLFW_KEY_LEFT) {
 		bovenkaak->setLocalPos(cVector3d(bovenkaak->getLocalPos().x(),
-			bovenkaak->getLocalPos().y() - 1,
+			bovenkaak->getLocalPos().y() - 10,
 			bovenkaak->getLocalPos().z())
 		);
-		gelopenAfstand->sub(0, 1, 0);
+		gelopenAfstand->sub(0, 10, 0);
 	}
 	else if (a_key == GLFW_KEY_UP) {
 		bovenkaak->setLocalPos(cVector3d(bovenkaak->getLocalPos().x(),
 			bovenkaak->getLocalPos().y(),
-			bovenkaak->getLocalPos().z() + 1)
+			bovenkaak->getLocalPos().z() + 10)
 		);
-		gelopenAfstand->sub(1, 0, 0);
+		gelopenAfstand->sub(10, 0, 0);
 	}
 	else if (a_key == GLFW_KEY_DOWN) {
 		bovenkaak->setLocalPos(cVector3d(bovenkaak->getLocalPos().x(),
 			bovenkaak->getLocalPos().y(),
-			bovenkaak->getLocalPos().z() - 1)
+			bovenkaak->getLocalPos().z() - 10)
 		);
-		gelopenAfstand->add(1, 0, 0);
+		gelopenAfstand->add(10, 0, 0);
 	}
 	else if (a_key == GLFW_KEY_X) {
 		draaiAs.set(1, 0, 0);
@@ -1117,16 +1124,16 @@ void updateHaptics(void)
 		}*/
 
 		bool accuraatRaakt = false;
-		bool kijken = false;
+		bool kijken = true;
 		if ((abs(gelopenAfstand->length()) >= minimumTeLopen)) kijken = true;
 		
 		if (kijken) {
 			double dist = 0;
-			accuraatRaakt = world->computeCollision(onderkaak, bovenkaak, traversalSetting::MULTIPOINT, dist, 50, *positie);
+			accuraatRaakt = world->computeCollision(onderkaak, bovenkaak, traversalSetting::BACKWARDTRACK, dist, 50, *positie);
 
 			if (accuraatRaakt) {
-				for (int i = 0; i < InnerSphereTree::globalPath.getPositions().size(); i++) cout << " - pos " << i + 1 << " = " << InnerSphereTree::globalPath.getPositions()[i];
-				cout << endl;
+				//for (unsigned int i = 0; i < InnerSphereTree::globalPath.getPositions().size(); i++) cout << " - pos " << i + 1 << " = " << InnerSphereTree::globalPath.getPositions()[i] << endl;
+				//cout << endl;
 			}
 
 			bolleke->setLocalPos((*positie));
