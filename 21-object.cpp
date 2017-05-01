@@ -86,6 +86,9 @@ cLabel* labelRates;
 // een label om te tonen of de broad phase zegt of de kaken raken.
 cLabel* labelRaakt;
 
+cLabel* labelDicht;
+cLabel* labelVer;
+
 // a flag that indicates if the haptic simulation is currently running
 bool simulationRunning = false;
 
@@ -98,6 +101,8 @@ bool showTriangles = true;
 // display level for collision tree
 int collisionTreeDisplayLevelOnderkaak = 0;
 int collisionTreeDisplayLevelBovenkaak = 0;
+
+float dichtste, verste;
 
 // a frequency counter to measure the simulation graphic rate
 cFrequencyCounter freqCounterGraphics;
@@ -480,22 +485,21 @@ int main(int argc, char* argv[])
 	onderkaak->setShowTriangles(true);
 	bovenkaak->setShowTriangles(true);
 
-	onderkaak->createAABBCollisionDetector(0.01);
 	//Bouw de innerspheretree op van de onderkaak.
 	Voxelizer* voxelizerOnderkaak = new Voxelizer();
 	cCollisionAABB* colliderOnderkaak = dynamic_cast<cCollisionAABB*>(onderkaak->getCollisionDetector());
 	//cout << "test: " << *(test->getTriangles()[0].p1) << endl;
 	voxelizerOnderkaak->setObject(colliderOnderkaak);
 	voxelizerOnderkaak->setPositie(cVector3d(0,0,0));
-	voxelizerOnderkaak->setAccuraatheid(75);
+	voxelizerOnderkaak->setAccuraatheid(50);
 	voxelizerOnderkaak->initialize();
 
-	istOnderkaak = voxelizerOnderkaak->buildInnerTree(6, onderkaak->getLocalPos(), (onderkaak->getBoundaryMax()-onderkaak->getBoundaryMin()).length());
+	istOnderkaak = voxelizerOnderkaak->buildInnerTree(8, onderkaak->getLocalPos(), (onderkaak->getBoundaryMax()-onderkaak->getBoundaryMin()).length());
 	delete voxelizerOnderkaak;
 
 	//istOnderkaak->printAABBCollisionTree(5);
-	saveIST(istOnderkaak, "Onderkaak_75_6");
-	//istOnderkaak = loadIST("Onderkaak");
+	saveIST(istOnderkaak, "Onderkaak_50_8");
+	//istOnderkaak = loadIST("Onderkaak_50_3");
 
 	onderkaak->setCollisionDetector(istOnderkaak);
 	// Bouw van innerspheretree van de onderkaak is klaar.
@@ -506,16 +510,16 @@ int main(int argc, char* argv[])
 	//cout << "test: " << *(test->getTriangles()[0].p1) << endl;
 	voxelizerBovenkaak->setObject(colliderBovenkaak);
 	voxelizerBovenkaak->setPositie(cVector3d(0,0,0));
-	voxelizerBovenkaak->setAccuraatheid(75);
+	voxelizerBovenkaak->setAccuraatheid(50);
 	voxelizerBovenkaak->initialize();
 
-	istBovenkaak = voxelizerBovenkaak->buildInnerTree(6, bovenkaak->getLocalPos(), (bovenkaak->getBoundaryMax() - bovenkaak->getBoundaryMin()).length());
+	istBovenkaak = voxelizerBovenkaak->buildInnerTree(8, bovenkaak->getLocalPos(), (bovenkaak->getBoundaryMax() - bovenkaak->getBoundaryMin()).length());
 	delete voxelizerBovenkaak;
 
 	////istBovenkaak->printAABBCollisionTree(5);
-	saveIST(istBovenkaak, "Bovenkaak_75_6");
+	saveIST(istBovenkaak, "Bovenkaak_50_8");
 
-	//istBovenkaak = loadIST("Bovenkaak");
+	//istBovenkaak = loadIST("Bovenkaak_50_3");
 	//istBovenkaak->printAABBCollisionTree(5);
 
 	bovenkaak->setCollisionDetector(istBovenkaak);
@@ -539,12 +543,18 @@ int main(int argc, char* argv[])
 	// create a label to display the haptic and graphic rate of the simulation en of de broadphase raakt.
 	labelRates = new cLabel(font);
 	labelRaakt = new cLabel(font);
+	labelDicht = new cLabel(font);
+	labelVer = new cLabel(font);
 
 	labelRates->m_fontColor.setRedSalmon();
 	labelRaakt->m_fontColor.setRedSalmon();
+	labelDicht->m_fontColor.setRedSalmon();
+	labelVer->m_fontColor.setRedSalmon();
 
 	camera->m_frontLayer->addChild(labelRaakt);
 	camera->m_frontLayer->addChild(labelRates);
+	camera->m_frontLayer->addChild(labelDicht);
+	camera->m_frontLayer->addChild(labelVer);
 
 	labelRaakt->setText("Raakt");
 
@@ -888,41 +898,6 @@ void mouseMotionCallback(GLFWwindow* a_window, double a_posX, double a_posY)
 			gelopenAfstand->add(std::numeric_limits<double>::infinity(), 0.0, 0.0);
 		}
 
-		//// get the vector that goes from the camera to the selected point (mouse click)
-		//cVector3d vCameraObject = selectedPoint - camera->getLocalPos();
-
-		//// get the vector that point in the direction of the camera. ("where the camera is looking at")
-		//cVector3d vCameraLookAt = camera->getLookVector();
-
-		//// compute the angle between both vectors
-		//double angle = cAngle(vCameraObject, vCameraLookAt);
-
-		//// compute the distance between the camera and the plane that intersects the object and 
-		//// which is parallel to the camera plane
-		//double distanceToObjectPlane = vCameraObject.length() * cos(angle);
-
-		//// convert the pixel in mouse space into a relative position in the world
-		//double factor = (distanceToObjectPlane * tan(0.5 * camera->getFieldViewAngleRad())) / (0.5 * height);
-		//double posRelX = factor * (a_posX - (0.5 * width));
-		//double posRelY = factor * ((height - a_posY) - (0.5 * height));
-
-		//// compute the new position in world coordinates
-		//cVector3d pos = camera->getLocalPos() +
-		//	distanceToObjectPlane * camera->getLookVector() +
-		//	posRelX * camera->getRightVector() +
-		//	posRelY * camera->getUpVector();
-
-		//cVector3d rotAxis = cVector3d(-1.0 / pos.x(), -1.0 / pos.y(), -1.0 / pos.z());
-
-		//// compute position of object by taking in account offset
-		//cVector3d posObject = pos - selectedObjectOffset;
-
-		//// apply new position to object
-		//cMatrix3d rot = selectedObject->getLocalRot();
-		////rot.setAxisAngleRotationDeg(cVector3d(0,1,0), rot.);
-		//rot.rotateAboutGlobalAxisDeg(cVector3d(1, 0, 0), 1);
-		//selectedObject->setLocalRot(rot);
-
 	}
 }
 
@@ -985,49 +960,6 @@ void mouseButtonCallback(GLFWwindow* a_window, int a_button, int a_action, int a
 	}
 }
 
-//------------------------------------------------------------------------------
-
-//void mouseMotionCallback(GLFWwindow* a_window, double a_posX, double a_posY)
-//{
-//	if ((selectedObject != NULL) && (mouseState == MOUSE_SELECTION_ROTATE))
-//	{
-////		// get the vector that goes from the camera to the selected point (mouse click)
-////		cVector3d vCameraObject = selectedPoint - camera->getLocalPos();
-////
-////		// get the vector that point in the direction of the camera. ("where the camera is looking at")
-////		cVector3d vCameraLookAt = camera->getLookVector();
-////
-////		// compute the angle between both vectors
-////		double angle = cAngle(vCameraObject, vCameraLookAt);
-////
-////		// compute the distance between the camera and the plane that intersects the object and 
-////		// which is parallel to the camera plane
-////		double distanceToObjectPlane = vCameraObject.length() * cos(angle);
-////
-////		// convert the pixel in mouse space into a relative position in the world
-////		double factor = (distanceToObjectPlane * tan(0.5 * camera->getFieldViewAngleRad())) / (0.5 * height);
-////		double posRelX = factor * (a_posX - (0.5 * width));
-////		double posRelY = factor * ((height - a_posY) - (0.5 * height));
-////
-////		// compute the new position in world coordinates
-////		cVector3d pos = camera->getLocalPos() +
-////			distanceToObjectPlane * camera->getLookVector() +
-////			posRelX * camera->getRightVector() +
-////			posRelY * camera->getUpVector();
-////
-////		// compute position of object by taking in account offset
-////		cVector3d posObject = pos - selectedObjectOffset;
-////
-////		// apply new position to object
-////		selectedObject->setLocalPos(posObject);
-////
-////		// place cursor at the position of the mouse click
-////		sphereSelect->setLocalPos(pos);
-//
-//		if()
-//	}
-//}
-
 void close(void)
 {
 	// stop the simulation
@@ -1055,6 +987,12 @@ void updateGraphics(void)
 
 	// update position of label
 	labelRates->setLocalPos((int)(0.5 * (width - labelRates->getWidth())), 15);
+
+	labelVer->setText("Ver: " + cStr(verste));
+	labelVer->setLocalPos(15, 150);
+
+	labelDicht->setText("Dicht: " + cStr(dichtste));
+	labelDicht->setLocalPos(15, 175);
 
 
 	/////////////////////////////////////////////////////////////////////
@@ -1129,11 +1067,17 @@ void updateHaptics(void)
 		
 		if (kijken) {
 			double dist = 0;
-			accuraatRaakt = world->computeCollision(onderkaak, bovenkaak, traversalSetting::BACKWARDTRACK, dist, 50, *positie);
+			accuraatRaakt = world->computeCollision(onderkaak, bovenkaak, traversalSetting::DISTANCE, dist, 50, *positie);
 
 			if (accuraatRaakt) {
 				//for (unsigned int i = 0; i < InnerSphereTree::globalPath.getPositions().size(); i++) cout << " - pos " << i + 1 << " = " << InnerSphereTree::globalPath.getPositions()[i] << endl;
 				//cout << endl;
+
+				dichtste = positie->x();
+				verste = positie->y();
+
+				if (dichtste != 0) accuraatRaakt = false;
+
 			}
 
 			bolleke->setLocalPos((*positie));
