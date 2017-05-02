@@ -340,7 +340,7 @@ int main(int argc, char* argv[])
 		cVector3d(0, 0, 1),    // zenith direction
 		cVector3d(1, 0, 0));   // azimuth direction
 
-	camera->setSphericalDeg(100,    // spherical coordinate radius
+	camera->setSphericalDeg(1000,    // spherical coordinate radius
 		60,     // spherical coordinate polar angle
 		10);    // spherical coordinate azimuth angle
 				// set the near and far clipping planes of the camera
@@ -398,7 +398,8 @@ int main(int argc, char* argv[])
 	bovenkaak->setMaterial(*matBovenkaak);
 	// load an object file
 	bool fileload;
-	fileload = onderkaak->loadFromFile2(RESOURCE_PATH("../resources/models/kaken/mandibulary_export_Brecht Beckers.stl"), *m1);
+	//fileload = onderkaak->loadFromFile2(RESOURCE_PATH("../resources/models/kaken/mandibulary_export_Brecht Beckers.stl"), *m1);
+	fileload = onderkaak->loadFromFile2(RESOURCE_PATH("../resources/models/dragon/dragon.stl"), *m1);
 	if (!fileload)
 	{
 #if defined(_MSVC)
@@ -412,7 +413,8 @@ int main(int argc, char* argv[])
 		return (-1);
 	}
 
-	fileload = bovenkaak->loadFromFile2(RESOURCE_PATH("../resources/models/kaken/maxillary_export_Brecht Beckers.stl"), *m2);
+	fileload = bovenkaak->loadFromFile2(RESOURCE_PATH("../resources/models/dragon/dragon.stl"), *m2);
+	//fileload = bovenkaak->loadFromFile2(RESOURCE_PATH("../resources/models/kaken/maxillary_export_Brecht Beckers.stl"), *m2);
 	if (!fileload)
 	{
 #if defined(_MSVC)
@@ -508,35 +510,35 @@ int main(int argc, char* argv[])
 	//cout << "test: " << *(test->getTriangles()[0].p1) << endl;
 	voxelizerOnderkaak->setObject(colliderOnderkaak);
 	voxelizerOnderkaak->setPositie(cVector3d(0,0,0));
-	voxelizerOnderkaak->setAccuraatheid(10);
+	voxelizerOnderkaak->setAccuraatheid(40);
 	voxelizerOnderkaak->initialize();
 
-	istOnderkaak = voxelizerOnderkaak->buildInnerTree(5, onderkaak->getLocalPos(), (onderkaak->getBoundaryMax()-onderkaak->getBoundaryMin()).length());
+	istOnderkaak = voxelizerOnderkaak->buildInnerTree(6, onderkaak->getLocalPos(), (onderkaak->getBoundaryMax()-onderkaak->getBoundaryMin()).length());
 	delete voxelizerOnderkaak;
 
 	//istOnderkaak->printAABBCollisionTree(5);
-	saveIST(istOnderkaak, "Onderkaak_10_4");
+	saveIST(istOnderkaak, "dragon_test");
 	//istOnderkaak = loadIST("Onderkaak_10_5");
 
 	onderkaak->setCollisionDetector(istOnderkaak);
 	// Bouw van innerspheretree van de onderkaak is klaar.
 
 	// Bouw de innerspheretree van de bovenkaak
-	Voxelizer* voxelizerBovenkaak = new Voxelizer();
-	cCollisionAABB* colliderBovenkaak = dynamic_cast<cCollisionAABB*>(bovenkaak->getCollisionDetector());
+	//Voxelizer* voxelizerBovenkaak = new Voxelizer();
+	//cCollisionAABB* colliderBovenkaak = dynamic_cast<cCollisionAABB*>(bovenkaak->getCollisionDetector());
 	//cout << "test: " << *(test->getTriangles()[0].p1) << endl;
-	voxelizerBovenkaak->setObject(colliderBovenkaak);
-	voxelizerBovenkaak->setPositie(cVector3d(0,0,0));
-	voxelizerBovenkaak->setAccuraatheid(10);
-	voxelizerBovenkaak->initialize();
+	//voxelizerBovenkaak->setObject(colliderBovenkaak);
+	//voxelizerBovenkaak->setPositie(cVector3d(0,0,0));
+	//voxelizerBovenkaak->setAccuraatheid(10);
+	//voxelizerBovenkaak->initialize();
 
-	istBovenkaak = voxelizerBovenkaak->buildInnerTree(5, bovenkaak->getLocalPos(), (bovenkaak->getBoundaryMax() - bovenkaak->getBoundaryMin()).length());
-	delete voxelizerBovenkaak;
+	//istBovenkaak = voxelizerBovenkaak->buildInnerTree(5, bovenkaak->getLocalPos(), (bovenkaak->getBoundaryMax() - bovenkaak->getBoundaryMin()).length());
+	//delete voxelizerBovenkaak;
 
 	////istBovenkaak->printAABBCollisionTree(5);
-	saveIST(istBovenkaak, "Bovenkaak_10_4");
+	//saveIST(istBovenkaak, "dragon_test");
 
-	//istBovenkaak = loadIST("Bovenkaak_10_5");
+	istBovenkaak = loadIST("dragon_test");
 	//istBovenkaak->printAABBCollisionTree(5);
 
 	bovenkaak->setCollisionDetector(istBovenkaak);
@@ -952,7 +954,7 @@ void mouseMotionCallback(GLFWwindow* a_window, double a_posX, double a_posY)
 void mouseScrollCallback(GLFWwindow* a_window, double a_offsetX, double a_offsetY)
 {
 	double r = camera->getSphericalRadius();
-	r = cClamp(r - 1 * a_offsetY, 30.0, 100.0);
+	r = cClamp(r - 1 * a_offsetY, 30.0, 1000.0);
 	camera->setSphericalRadius(r);
 }
 
