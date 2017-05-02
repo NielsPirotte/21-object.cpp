@@ -5,7 +5,9 @@
 #include <cmath>
 #include <ist/InnerSphereTree.h>
 #include <collisions/Voxelizer.h>
-#include <ist/SaveIST.h>
+#include "ist/SaveIST.h"
+#include "PQP/PQP.h"
+
 //------------------------------------------------------------------------------
 using namespace chai3d;
 using namespace std;
@@ -19,7 +21,6 @@ cStereoMode stereoMode = C_STEREO_DISABLED;
 
 // fullscreen mode
 bool fullscreen = false;
-
 //update boundarybox
 bool wilupdaten = false;
 
@@ -44,6 +45,19 @@ enum MouseState
 
 // a world that contains all objects of the virtual environment
 cWorld* world;
+
+//collision detection with pqp lib
+PQP_Model* m1;
+PQP_Model* m2;
+PQP_Model* bol;
+
+//position and rotation of m1 for pqp collision detection
+PQP_REAL T1[3];
+PQP_REAL R1[3][3];
+
+//position and rotation of m2 for pqp collision detection
+PQP_REAL T2[3];
+PQP_REAL R2[3][3];
 
 // a camera to render the world in the window display
 cCamera* camera;
@@ -155,6 +169,10 @@ const GLFWvidmode* mode;
 //------------------------------------------------------------------------------
 // DECLARED FUNCTIONS
 //------------------------------------------------------------------------------
+
+//function for pqp implementation
+void setPosAndRot1();
+void setPosAndRot2();
 
 // callback when the window display is resized
 void windowSizeCallback(GLFWwindow* a_window, int a_width, int a_height);
@@ -302,6 +320,10 @@ int main(int argc, char* argv[])
 	//--------------------------------------------------------------------------
 	// WORLD - CAMERA - LIGHTING
 	//--------------------------------------------------------------------------
+	// accurate check with PQP library
+	m1 = new PQP_Model();
+	m2 = new PQP_Model();
+	bol = new PQP_Model();
 
 	// create a new world.
 	world = new cWorld();
@@ -376,11 +398,11 @@ int main(int argc, char* argv[])
 	bovenkaak->setMaterial(*matBovenkaak);
 	// load an object file
 	bool fileload;
-	fileload = onderkaak->loadFromFile2(RESOURCE_PATH("../resources/models/kaken/mandibulary_export_Brecht Beckers.stl"));
+	fileload = onderkaak->loadFromFile2(RESOURCE_PATH("../resources/models/kaken/mandibulary_export_Brecht Beckers.stl"), *m1);
 	if (!fileload)
 	{
 #if defined(_MSVC)
-		fileload = onderkaak->loadFromFile2("../../../bin/resources/models/kaken/mandibulary_export_Brecht Beckers.stl");
+		fileload = onderkaak->loadFromFile2("../../../bin/resources/models/kaken/mandibulary_export_Brecht Beckers.stl", *m1);
 #endif
 	}
 	if (!fileload)
@@ -390,11 +412,11 @@ int main(int argc, char* argv[])
 		return (-1);
 	}
 
-	fileload = bovenkaak->loadFromFile2(RESOURCE_PATH("../resources/models/kaken/maxillary_export_Brecht Beckers.stl"));
+	fileload = bovenkaak->loadFromFile2(RESOURCE_PATH("../resources/models/kaken/maxillary_export_Brecht Beckers.stl"), *m2);
 	if (!fileload)
 	{
 #if defined(_MSVC)
-		fileload = bovenkaak->loadFromFile2("../../../bin/resources/models/kaken/maxillary_export_Brecht Beckers.stl");
+		fileload = bovenkaak->loadFromFile2("../../../bin/resources/models/kaken/maxillary_export_Brecht Beckers.stl", *m2);
 #endif
 	}
 	if (!fileload)
@@ -404,11 +426,11 @@ int main(int argc, char* argv[])
 		return (-1);
 	}
 
-	fileload = bolleke->loadFromFile2(RESOURCE_PATH("../resources/models/bol.stl"));
+	fileload = bolleke->loadFromFile2(RESOURCE_PATH("../resources/models/bol.stl"), *bol);
 	if (!fileload)
 	{
 #if defined(_MSVC)
-		fileload = bolleke->loadFromFile2("../../../bin/resources/models/bol.stl");
+		fileload = bolleke->loadFromFile2("../../../bin/resources/models/bol.stl", *bol);
 #endif
 	}
 	if (!fileload)
@@ -480,22 +502,21 @@ int main(int argc, char* argv[])
 	onderkaak->setShowTriangles(true);
 	bovenkaak->setShowTriangles(true);
 
-	onderkaak->createAABBCollisionDetector(0.01);
 	//Bouw de innerspheretree op van de onderkaak.
 	Voxelizer* voxelizerOnderkaak = new Voxelizer();
 	cCollisionAABB* colliderOnderkaak = dynamic_cast<cCollisionAABB*>(onderkaak->getCollisionDetector());
 	//cout << "test: " << *(test->getTriangles()[0].p1) << endl;
 	voxelizerOnderkaak->setObject(colliderOnderkaak);
 	voxelizerOnderkaak->setPositie(cVector3d(0,0,0));
-	voxelizerOnderkaak->setAccuraatheid(75);
+	voxelizerOnderkaak->setAccuraatheid(10);
 	voxelizerOnderkaak->initialize();
 
-	istOnderkaak = voxelizerOnderkaak->buildInnerTree(6, onderkaak->getLocalPos(), (onderkaak->getBoundaryMax()-onderkaak->getBoundaryMin()).length());
+	istOnderkaak = voxelizerOnderkaak->buildInnerTree(5, onderkaak->getLocalPos(), (onderkaak->getBoundaryMax()-onderkaak->getBoundaryMin()).length());
 	delete voxelizerOnderkaak;
 
 	//istOnderkaak->printAABBCollisionTree(5);
-	saveIST(istOnderkaak, "Onderkaak_75_6");
-	//istOnderkaak = loadIST("Onderkaak");
+	saveIST(istOnderkaak, "Onderkaak_10_4");
+	//istOnderkaak = loadIST("Onderkaak_10_5");
 
 	onderkaak->setCollisionDetector(istOnderkaak);
 	// Bouw van innerspheretree van de onderkaak is klaar.
@@ -506,16 +527,16 @@ int main(int argc, char* argv[])
 	//cout << "test: " << *(test->getTriangles()[0].p1) << endl;
 	voxelizerBovenkaak->setObject(colliderBovenkaak);
 	voxelizerBovenkaak->setPositie(cVector3d(0,0,0));
-	voxelizerBovenkaak->setAccuraatheid(75);
+	voxelizerBovenkaak->setAccuraatheid(10);
 	voxelizerBovenkaak->initialize();
 
-	istBovenkaak = voxelizerBovenkaak->buildInnerTree(6, bovenkaak->getLocalPos(), (bovenkaak->getBoundaryMax() - bovenkaak->getBoundaryMin()).length());
+	istBovenkaak = voxelizerBovenkaak->buildInnerTree(5, bovenkaak->getLocalPos(), (bovenkaak->getBoundaryMax() - bovenkaak->getBoundaryMin()).length());
 	delete voxelizerBovenkaak;
 
 	////istBovenkaak->printAABBCollisionTree(5);
-	saveIST(istBovenkaak, "Bovenkaak_75_6");
+	saveIST(istBovenkaak, "Bovenkaak_10_4");
 
-	//istBovenkaak = loadIST("Bovenkaak");
+	//istBovenkaak = loadIST("Bovenkaak_10_5");
 	//istBovenkaak->printAABBCollisionTree(5);
 
 	bovenkaak->setCollisionDetector(istBovenkaak);
@@ -1124,23 +1145,49 @@ void updateHaptics(void)
 		}*/
 
 		bool accuraatRaakt = false;
-		bool kijken = true;
-		if ((abs(gelopenAfstand->length()) >= minimumTeLopen)) kijken = true;
-		
-		if (kijken) {
+		//bool kijken = true;
+		//if ((abs(gelopenAfstand->length()) >= minimumTeLopen)) kijken = true;
+		//double distance_pqp;
+		//int colliding;
+		if (true) {
 			double dist = 0;
-			accuraatRaakt = world->computeCollision(onderkaak, bovenkaak, traversalSetting::BACKWARDTRACK, dist, 50, *positie);
+			//accuraatRaakt = world->computeCollision(onderkaak, bovenkaak, traversalSetting::DISTANCE, dist, 50, *positie);
+			accuraatRaakt = world->computeCollision(istOnderkaak, istBovenkaak, traversalSetting::DISTANCE, dist, 50, *positie);
 
-			if (accuraatRaakt) {
+			//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+			//PQP implemantation
+			//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+			//set positions and rotations
+			//setPosAndRot1();
+			//setPosAndRot2();
+
+			// distance with pqp lib
+			//PQP_DistanceResult dres;
+			//double rel_err = 0.0, abs_err = 0.0;
+			//PQP_Distance(&dres, R1, T1, m1, R2, T2, m2, rel_err, abs_err);
+
+			//distance_pqp = dres.Distance();
+			//cout << "pqp distance: " << distance_pqp << endl;
+
+			//cout << "onderkaak pos: " << onderkaak->getLocalPos() << endl;
+			//cout << "model1 pos: " << T1[0] << " " << T1[1] << " " << T1[2] << endl;
+
+			//colliding querry with pqp
+			//PQP_CollideResult cres;
+			//PQP_Collide(&cres, R1, T1, m1, R2, T2, m2);
+			//colliding = cres.Colliding();
+			//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+			//if (accuraatRaakt) {
 				//for (unsigned int i = 0; i < InnerSphereTree::globalPath.getPositions().size(); i++) cout << " - pos " << i + 1 << " = " << InnerSphereTree::globalPath.getPositions()[i] << endl;
 				//cout << endl;
-			}
+			//}
 
 			bolleke->setLocalPos((*positie));
 
-			minimumTeLopen = (float)dist;
-			gelopenAfstand->zero();
-			hulp = false;
+			//minimumTeLopen = (float)dist;
+			//gelopenAfstand->zero();
+			//hulp = false;
 		}
 
 		if (!accuraatRaakt) labelRaakt->m_fontColor.setA(0);
@@ -1154,14 +1201,39 @@ void updateHaptics(void)
 		cout << "IST1: " << istBovenkaak->getRootSphere()->getPosition() << " : " << istBovenkaak->getRootSphere()->getRadius() << endl;
 		cout << istOnderkaak->getRootSphere()->distance(istBovenkaak->getRootSphere(), cVector3d(0,0,0), cVector3d(0,0,0)) << " afstand tussen roots" << endl << endl;*/
 
-		if (wilupdaten) {
+		//if (wilupdaten) {
 			//bovenkaak->getCollisionDetector()->update();
-			wilupdaten = false;
-		}
+			//wilupdaten = false;
+		//}
 	}
 
 	// exit haptics thread
 	simulationFinished = true;
+}
+
+//HELP FUNCTION
+void setPosAndRot1() {
+	cMatrix3d m = onderkaak->getLocalRot();
+	cVector3d p = onderkaak->getLocalPos();
+
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			R1[i][j] = m(i,j);
+		}
+		T1[i] = p(i);
+	}
+}
+
+void setPosAndRot2() {
+	cMatrix3d m = bovenkaak->getLocalRot();
+	cVector3d p = bovenkaak->getLocalPos();
+
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			R2[i][j] = m(i, j);
+		}
+		T2[i] = p(i);
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
