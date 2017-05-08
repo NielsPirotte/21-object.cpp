@@ -24,6 +24,9 @@ bool fullscreen = false;
 //update boundarybox
 bool wilupdaten = false;
 
+// Check for distance automatic
+int checkState = 0;
+
 //colors of the collisiontrees for rendering
 cColorf colorOnderkaak;
 cColorf colorBovenkaak;
@@ -329,7 +332,7 @@ int main(int argc, char* argv[])
 	world = new cWorld();
 
 	// set the background color of the environment
-	world->m_backgroundColor.setBlack();
+	world->m_backgroundColor.setWhite();
 
 	// create a camera and insert it into the virtual world
 	camera = new cCamera(world);
@@ -383,6 +386,10 @@ int main(int argc, char* argv[])
 	bovenkaak = new cMesh();
 	bolleke = new cMesh();
 
+	cMaterial* matBolleke = new cMaterial();
+	matBolleke->setUHasselt();
+	bolleke->setMaterial(*matBolleke);
+
 	// add object to world
 	world->addChild(onderkaak);
 	world->addChild(bovenkaak);
@@ -390,11 +397,11 @@ int main(int argc, char* argv[])
 
 	// set materials for the objects
 	matOnderkaak = new cMaterial();
-	matOnderkaak->setWhite();
+	matOnderkaak->setSpecialGreen();
 	onderkaak->setMaterial(*matOnderkaak);
 
 	matBovenkaak = new cMaterial();
-	matBovenkaak->setWhite();
+	matBovenkaak->setSpecialGreen();
 	bovenkaak->setMaterial(*matBovenkaak);
 	// load an object file
 	bool fileload;
@@ -442,7 +449,7 @@ int main(int argc, char* argv[])
 		return (-1);
 	}
 
-	bolleke->setWireMode(true);
+	bolleke->setWireMode(false);
 	// disable culling so that faces are rendered on both sides
 	onderkaak->setUseCulling(true);
 	bovenkaak->setUseCulling(true);
@@ -468,7 +475,7 @@ int main(int argc, char* argv[])
 	size = cSub(bolleke->getBoundaryMax(), bolleke->getBoundaryMin()).length();
 
 	if (size > 0.001) {
-		bolleke->scale(5);
+		bolleke->scale(2);
 	}
 	cColorf color;
 	color.setOrangeTomato();
@@ -505,20 +512,20 @@ int main(int argc, char* argv[])
 	bovenkaak->setShowTriangles(true);
 
 	//Bouw de innerspheretree op van de onderkaak.
-	Voxelizer* voxelizerOnderkaak = new Voxelizer();
-	cCollisionAABB* colliderOnderkaak = dynamic_cast<cCollisionAABB*>(onderkaak->getCollisionDetector());
-	//cout << "test: " << *(test->getTriangles()[0].p1) << endl;
-	voxelizerOnderkaak->setObject(colliderOnderkaak);
-	voxelizerOnderkaak->setPositie(cVector3d(0,0,0));
-	voxelizerOnderkaak->setAccuraatheid(40);
-	voxelizerOnderkaak->initialize();
+	//Voxelizer* voxelizerOnderkaak = new Voxelizer();
+	//cCollisionAABB* colliderOnderkaak = dynamic_cast<cCollisionAABB*>(onderkaak->getCollisionDetector());
+	////cout << "test: " << *(test->getTriangles()[0].p1) << endl;
+	//voxelizerOnderkaak->setObject(colliderOnderkaak);
+	//voxelizerOnderkaak->setPositie(cVector3d(0,0,0));
+	//voxelizerOnderkaak->setAccuraatheid(50);
+	//voxelizerOnderkaak->initialize();
 
-	istOnderkaak = voxelizerOnderkaak->buildInnerTree(6, onderkaak->getLocalPos(), (onderkaak->getBoundaryMax()-onderkaak->getBoundaryMin()).length());
-	delete voxelizerOnderkaak;
+	//istOnderkaak = voxelizerOnderkaak->buildInnerTree(9, onderkaak->getLocalPos(), (onderkaak->getBoundaryMax()-onderkaak->getBoundaryMin()).length());
+	//delete voxelizerOnderkaak;
 
-	//istOnderkaak->printAABBCollisionTree(5);
-	saveIST(istOnderkaak, "dragon_test");
-	//istOnderkaak = loadIST("Onderkaak_10_5");
+	////istOnderkaak->printAABBCollisionTree(5);
+	//saveIST(istOnderkaak, "Onderkaak_50_9_n");
+	istOnderkaak = loadIST("dragon_test");
 
 	onderkaak->setCollisionDetector(istOnderkaak);
 	// Bouw van innerspheretree van de onderkaak is klaar.
@@ -526,17 +533,17 @@ int main(int argc, char* argv[])
 	// Bouw de innerspheretree van de bovenkaak
 	//Voxelizer* voxelizerBovenkaak = new Voxelizer();
 	//cCollisionAABB* colliderBovenkaak = dynamic_cast<cCollisionAABB*>(bovenkaak->getCollisionDetector());
-	//cout << "test: " << *(test->getTriangles()[0].p1) << endl;
+	////cout << "test: " << *(test->getTriangles()[0].p1) << endl;
 	//voxelizerBovenkaak->setObject(colliderBovenkaak);
 	//voxelizerBovenkaak->setPositie(cVector3d(0,0,0));
-	//voxelizerBovenkaak->setAccuraatheid(10);
+	//voxelizerBovenkaak->setAccuraatheid(50);
 	//voxelizerBovenkaak->initialize();
 
-	//istBovenkaak = voxelizerBovenkaak->buildInnerTree(5, bovenkaak->getLocalPos(), (bovenkaak->getBoundaryMax() - bovenkaak->getBoundaryMin()).length());
+	//istBovenkaak = voxelizerBovenkaak->buildInnerTree(9, bovenkaak->getLocalPos(), (bovenkaak->getBoundaryMax() - bovenkaak->getBoundaryMin()).length());
 	//delete voxelizerBovenkaak;
 
-	////istBovenkaak->printAABBCollisionTree(5);
-	//saveIST(istBovenkaak, "dragon_test");
+	//istBovenkaak->printAABBCollisionTree(5);
+	//saveIST(istBovenkaak, "Bovenkaak_50_9_n");
 
 	istBovenkaak = loadIST("dragon_test");
 	//istBovenkaak->printAABBCollisionTree(5);
@@ -544,10 +551,10 @@ int main(int argc, char* argv[])
 	bovenkaak->setCollisionDetector(istBovenkaak);
 
 	//set kleur collision detectors for rendering
-	colorOnderkaak.setGreenForest();
+	colorOnderkaak.setSpecialGreen();
 	onderkaak->setCollisionDetectorProperties(0, colorOnderkaak, true);
 
-	colorBovenkaak.setOrangeTomato();
+	colorBovenkaak.setSpecialGreen();
 	bovenkaak->setCollisionDetectorProperties(0, colorBovenkaak, true);
 	// Bouw van de innerspheretree van de bovenkaak is klaar.
 
@@ -813,20 +820,24 @@ void keyCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, 
 	}
 	else if (a_key == GLFW_KEY_B) {
 		selectedObject = bovenkaak;
+	} 
+	else if (a_key == GLFW_KEY_C) {
+		selectedObject = nullptr;
+		cout << "kak" << endl;
 	}
 
 	if (selectedObject == onderkaak) {
 		onderkaak->m_material->setBlue();
 	}
 	else {
-		onderkaak->m_material->setWhite();
+		onderkaak->m_material->setKULeuven();
 	}
 
 	if (selectedObject == bovenkaak) {
 		bovenkaak->m_material->setBlue();
 	}
 	else {
-		bovenkaak->m_material->setWhite();
+		bovenkaak->m_material->setKULeuven();
 	}
 
 	if (istBovenkaak != nullptr) istBovenkaak->setPosition((bovenkaak->getLocalPos()));
@@ -954,7 +965,7 @@ void mouseMotionCallback(GLFWwindow* a_window, double a_posX, double a_posY)
 void mouseScrollCallback(GLFWwindow* a_window, double a_offsetX, double a_offsetY)
 {
 	double r = camera->getSphericalRadius();
-	r = cClamp(r - 1 * a_offsetY, 30.0, 1000.0);
+	r = cClamp(r - 10 * a_offsetY, 30.0, 1000.0);
 	camera->setSphericalRadius(r);
 }
 
@@ -1114,6 +1125,8 @@ void updateHaptics(void)
 
 	// main haptic simulation loop
 	bool hulp = true;
+	Sphere* pa = nullptr;
+	Sphere* pb = nullptr;
 	while (simulationRunning)
 	{
 		/////////////////////////////////////////////////////////////////////////
@@ -1149,12 +1162,23 @@ void updateHaptics(void)
 		bool accuraatRaakt = false;
 		//bool kijken = true;
 		//if ((abs(gelopenAfstand->length()) >= minimumTeLopen)) kijken = true;
-		//double distance_pqp;
-		//int colliding;
+		double distance_pqp;
+		int colliding;
 		if (true) {
 			double dist = 0;
-			//accuraatRaakt = world->computeCollision(onderkaak, bovenkaak, traversalSetting::DISTANCE, dist, 50, *positie);
-			accuraatRaakt = world->computeCollision(istOnderkaak, istBovenkaak, traversalSetting::DISTANCE, dist, 50, *positie);
+			//keyCallback(window, GLFW_KEY_RIGHT, 0, GLFW_PRESS, 0);
+			accuraatRaakt = world->computeCollision(onderkaak, bovenkaak, traversalSetting::BACKWARDTRACK, dist, 50, *positie);
+			//accuraatRaakt = world->computeCollision(istOnderkaak, istBovenkaak, traversalSetting::ACCURATE, dist, 50, *positie, pa, pb);
+
+			//if (checkState == 0) {
+			//	cout << "Distance: " << dist << endl;
+			//}
+			//else if (checkState == 1) {
+			//	cout << "Distance: " << dist << endl;
+			//	//close();
+			//}
+
+			//checkState++;
 
 			//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 			//PQP implemantation
@@ -1164,20 +1188,21 @@ void updateHaptics(void)
 			//setPosAndRot2();
 
 			// distance with pqp lib
-			//PQP_DistanceResult dres;
-			//double rel_err = 0.0, abs_err = 0.0;
-			//PQP_Distance(&dres, R1, T1, m1, R2, T2, m2, rel_err, abs_err);
+			/*PQP_DistanceResult dres;
+			double rel_err = 0.0, abs_err = 0.0;
+			PQP_Distance(&dres, R1, T1, m1, R2, T2, m2, rel_err, abs_err);
 
-			//distance_pqp = dres.Distance();
-			//cout << "pqp distance: " << distance_pqp << endl;
+			distance_pqp = dres.Distance();
+			cout << "pqp distance: " << distance_pqp << endl;*/
+			//cout << "ist distance: " << positie->x() << endl << endl;
 
 			//cout << "onderkaak pos: " << onderkaak->getLocalPos() << endl;
 			//cout << "model1 pos: " << T1[0] << " " << T1[1] << " " << T1[2] << endl;
 
 			//colliding querry with pqp
-			//PQP_CollideResult cres;
-			//PQP_Collide(&cres, R1, T1, m1, R2, T2, m2);
-			//colliding = cres.Colliding();
+			/*PQP_CollideResult cres;
+			PQP_Collide(&cres, R1, T1, m1, R2, T2, m2);
+			colliding = cres.Colliding();*/
 			//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 			//if (accuraatRaakt) {
