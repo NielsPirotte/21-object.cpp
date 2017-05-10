@@ -52,7 +52,6 @@ cWorld* world;
 //collision detection with pqp lib
 PQP_Model* m1;
 PQP_Model* m2;
-PQP_Model* bol;
 
 //position and rotation of m1 for pqp collision detection
 PQP_REAL T1[3];
@@ -163,6 +162,7 @@ vector<cCollisionAABBBox> leafnodes2;
 // kijk pas als de afstand tussen de 2 overschreden is.
 cVector3d* gelopenAfstand = new cVector3d(0.0, 0.0, 0.0);
 float minimumTeLopen = 0;
+bool moved = true;
 
 InnerSphereTree* istBovenkaak;
 InnerSphereTree* istOnderkaak;
@@ -336,7 +336,6 @@ int main(int argc, char* argv[])
 	// accurate check with PQP library
 	m1 = new PQP_Model();
 	m2 = new PQP_Model();
-	bol = new PQP_Model();
 
 	// create a new world.
 	world = new cWorld();
@@ -448,11 +447,11 @@ int main(int argc, char* argv[])
 		return (-1);
 	}
 
-	fileload = bolleke1->loadFromFile2(RESOURCE_PATH("../resources/models/bol.stl"), *bol);
+	fileload = bolleke1->loadFromFile2(RESOURCE_PATH("../resources/models/bol.stl"));
 	if (!fileload)
 	{
 #if defined(_MSVC)
-		fileload = bolleke1->loadFromFile2("../../../bin/resources/models/bol.stl", *bol);
+		fileload = bolleke1->loadFromFile2("../../../bin/resources/models/bol.stl");
 #endif
 	}
 	if (!fileload)
@@ -499,8 +498,6 @@ int main(int argc, char* argv[])
 	// maak kopie van bollekes
 	bolleke2 = bolleke1->copy(false, false, true, false);
 	bolleke3 = bolleke1->copy(false, false, true, false);
-	delete bolleke1;
-	bolleke1 = bolleke2->copy(false, false, true, false);
 	world->addChild(bolleke1);
 	world->addChild(bolleke2);
 	world->addChild(bolleke3);
@@ -870,6 +867,7 @@ void keyCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, 
 
 	if (istBovenkaak != nullptr) istBovenkaak->setPosition((bovenkaak->getLocalPos()));
 	wilupdaten = true;
+	moved = true;
 }
 
 //------------------------------------------------------------------------------
@@ -935,6 +933,7 @@ void mouseMotionCallback(GLFWwindow* a_window, double a_posX, double a_posY)
 			istOnderkaak->setPosition((onderkaak->getLocalPos()));
 			wilupdaten = true;
 		}
+		moved = true;
 	}
 	else if ((selectedObject != NULL) && (mouseState == MOUSE_SELECTION_ROTATE))
 	{
@@ -943,12 +942,46 @@ void mouseMotionCallback(GLFWwindow* a_window, double a_posX, double a_posY)
 		selectedObject->setLocalRot(rot);
 		if (selectedObject == onderkaak) {
 			istOnderkaak->setRotation(rot);
-			gelopenAfstand->add(std::numeric_limits<double>::infinity(), 0.0, 0.0);
 		}
 		else {
 			istBovenkaak->setRotation(rot);
-			gelopenAfstand->add(std::numeric_limits<double>::infinity(), 0.0, 0.0);
 		}
+		gelopenAfstand->add(std::numeric_limits<double>::infinity(), 0.0, 0.0);
+		moved = true;
+		//// get the vector that goes from the camera to the selected point (mouse click)
+		//cVector3d vCameraObject = selectedPoint - camera->getLocalPos();
+
+		//// get the vector that point in the direction of the camera. ("where the camera is looking at")
+		//cVector3d vCameraLookAt = camera->getLookVector();
+
+		//// compute the angle between both vectors
+		//double angle = cAngle(vCameraObject, vCameraLookAt);
+
+		//// compute the distance between the camera and the plane that intersects the object and 
+		//// which is parallel to the camera plane
+		//double distanceToObjectPlane = vCameraObject.length() * cos(angle);
+
+		//// convert the pixel in mouse space into a relative position in the world
+		//double factor = (distanceToObjectPlane * tan(0.5 * camera->getFieldViewAngleRad())) / (0.5 * height);
+		//double posRelX = factor * (a_posX - (0.5 * width));
+		//double posRelY = factor * ((height - a_posY) - (0.5 * height));
+
+		//// compute the new position in world coordinates
+		//cVector3d pos = camera->getLocalPos() +
+		//	distanceToObjectPlane * camera->getLookVector() +
+		//	posRelX * camera->getRightVector() +
+		//	posRelY * camera->getUpVector();
+
+		//cVector3d rotAxis = cVector3d(-1.0 / pos.x(), -1.0 / pos.y(), -1.0 / pos.z());
+
+		//// compute position of object by taking in account offset
+		//cVector3d posObject = pos - selectedObjectOffset;
+
+		//// apply new position to object
+		//cMatrix3d rot = selectedObject->getLocalRot();
+		////rot.setAxisAngleRotationDeg(cVector3d(0,1,0), rot.);
+		//rot.rotateAboutGlobalAxisDeg(cVector3d(1, 0, 0), 1);
+		//selectedObject->setLocalRot(rot);
 
 	}
 }
@@ -958,7 +991,8 @@ void mouseMotionCallback(GLFWwindow* a_window, double a_posX, double a_posY)
 void mouseScrollCallback(GLFWwindow* a_window, double a_offsetX, double a_offsetY)
 {
 	double r = camera->getSphericalRadius();
-	r = cClamp(r - 10 * a_offsetY, 30.0, 1000.0);
+	r = cClamp(r - 1 * a_offsetY, 30.0, 120.0);
+	//r = cClamp(r - 1 * a_offsetY, 1.0, 30.0);
 	camera->setSphericalRadius(r);
 }
 
@@ -1115,23 +1149,23 @@ void updateHaptics(void)
 		}*/
 
 		bool accuraatRaakt = false;
-		//bool kijken = false;
-		//if ((abs(gelopenAfstand->length()) >= minimumTeLopen)) kijken = true;
-		double distance_pqp;
-		int colliding;
-		if (true) {
+		bool kijken = false;
+		if ((gelopenAfstand->length() > minimumTeLopen)) kijken = true;
+		//double distance_pqp;
+		//int colliding;
+		if (kijken) {
 			double dist = 0;
 			accuraatRaakt = world->computeCollision(onderkaak, bovenkaak, traversalSetting::MULTIPOINT, dist, 50, *positie);
 
 			//set bollekes
-			if (InnerSphereTree::globalPath.getPositionSize() > 0) {
-				bolleke1->setLocalPos(InnerSphereTree::globalPath.getPositions(0));
+			if (InnerSphereTree::globalPath.getNumberOfCollisions() > 0) {
+				bolleke1->setLocalPos(InnerSphereTree::globalPath.getCollision(0));
 			}
-			if (InnerSphereTree::globalPath.getPositionSize() > 1) {
-				bolleke2->setLocalPos(InnerSphereTree::globalPath.getPositions(1));
+			if (InnerSphereTree::globalPath.getNumberOfCollisions() > 1) {
+				bolleke2->setLocalPos(InnerSphereTree::globalPath.getCollision(1));
 			}
-			if (InnerSphereTree::globalPath.getPositionSize() > 2) {
-				bolleke3->setLocalPos(InnerSphereTree::globalPath.getPositions(2));
+			if (InnerSphereTree::globalPath.getNumberOfCollisions() > 2) {
+				bolleke3->setLocalPos(InnerSphereTree::globalPath.getCollision(2));
 			}
 
 			//accuraatRaakt = world->computeCollision(istOnderkaak, istBovenkaak, traversalSetting::DISTANCE, dist, 50, *positie, A, B);
@@ -1140,14 +1174,14 @@ void updateHaptics(void)
 			//PQP implemantation
 			//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 			//set positions and rotations
-			//setPosAndRot1();
-			//setPosAndRot2();
+			//setPosAndRot(T1, R1, onderkaak);
+			//setPosAndRot(T2, R2, bovenkaak);
 
 			// distance with pqp lib
-			//PQP_DistanceResult dres;
-			//double rel_err = 0.0, abs_err = 0.0;
-			//PQP_Distance(&dres, R1, T1, m1, R2, T2, m2, rel_err, abs_err);
-			//distance_pqp = dres.Distance();
+			/*PQP_DistanceResult dres;
+			double rel_err = 0.0, abs_err = 0.0;
+			PQP_Distance(&dres, R1, T1, m1, R2, T2, m2, rel_err, abs_err);
+			distance_pqp = dres.Distance();*/
 			//cout << "pqp distance: " << distance_pqp << endl;
 
 			//cout << "onderkaak pos: " << onderkaak->getLocalPos() << endl;
@@ -1168,7 +1202,7 @@ void updateHaptics(void)
 
 			//minimumTeLopen = (float)dist;
 			//gelopenAfstand->zero();
-			//hulp = false;
+			//moved = false;
 		}
 		//if(!colliding) labelRaakt->m_fontColor.setA(0);
 		//if (distance_pqp > 0.0) labelRaakt->m_fontColor.setA(0);
@@ -1191,31 +1225,6 @@ void updateHaptics(void)
 
 	// exit haptics thread
 	simulationFinished = true;
-}
-
-//HELP FUNCTION
-void setPosAndRot1() {
-	cMatrix3d m = onderkaak->getLocalRot();
-	cVector3d p = onderkaak->getLocalPos();
-
-	for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 3; j++) {
-			R1[i][j] = m(i,j);
-		}
-		T1[i] = p(i);
-	}
-}
-
-void setPosAndRot2() {
-	cMatrix3d m = bovenkaak->getLocalRot();
-	cVector3d p = bovenkaak->getLocalPos();
-
-	for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 3; j++) {
-			R2[i][j] = m(i, j);
-		}
-		T2[i] = p(i);
-	}
 }
 
 //////////////////////////////////////////////////////////////////////////
