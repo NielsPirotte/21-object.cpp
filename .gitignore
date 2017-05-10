@@ -8,3 +8,5 @@ istBovenkaak.vp
 istOnderkaak.vp
 #ignore obj/
 obj/
+#ignore TMP file
+21-object.cpp~*

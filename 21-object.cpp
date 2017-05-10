@@ -84,13 +84,10 @@ cVector3d selectedObjectOffset;
 // position of mouse click.
 cVector3d selectedPoint;
 
-
-//Bolleke om te zien waar de kaak raakt
+//contactPoints in model
 cMesh* bolleke1;
 cMesh* bolleke2;
 cMesh* bolleke3;
-
-cVector3d* positie = new cVector3d(0.0, 0.0, 0.0);
 
 // a colored background
 cBackground* background;
@@ -174,10 +171,6 @@ const GLFWvidmode* mode;
 //------------------------------------------------------------------------------
 // DECLARED FUNCTIONS
 //------------------------------------------------------------------------------
-
-//function for pqp implementation
-void setPosAndRot1();
-void setPosAndRot2();
 
 // callback when the window display is resized
 void windowSizeCallback(GLFWwindow* a_window, int a_width, int a_height);
@@ -403,6 +396,7 @@ int main(int argc, char* argv[])
 	matBovenkaak = new cMaterial();
 	matBovenkaak->setWhite();
 	bovenkaak->setMaterial(*matBovenkaak);
+
 	// load an object file
 	bool fileload;
 	fileload = onderkaak->loadFromFile2(RESOURCE_PATH("../resources/models/kaken/mandibulary_export_Brecht Beckers.stl"), *m1);
@@ -449,30 +443,13 @@ int main(int argc, char* argv[])
 		return (-1);
 	}
 
-	bolleke1->setWireMode(false);
 	// disable culling so that faces are rendered on both sides
 	onderkaak->setUseCulling(true);
 	bovenkaak->setUseCulling(true);
 
-	// get dimensions of object
-	onderkaak->computeBoundaryBox(true);
-	double size = cSub(onderkaak->getBoundaryMax(), onderkaak->getBoundaryMin()).length();
-
-	// resize object to screen
-	if (size > 0.001)
-	{
-		//onderkaak->scale(1.0 / size);
-	}
-
-	bovenkaak->computeBoundaryBox(true);
-	size = cSub(bovenkaak->getBoundaryMax(), bovenkaak->getBoundaryMin()).length();
-
-	if (size > 0.001) {
-		//bovenkaak->scale(1.0 / size);
-	}
-
+	// Scale bolleke1
 	bolleke1->computeBoundaryBox(true);
-	size = cSub(bolleke1->getBoundaryMax(), bolleke1->getBoundaryMin()).length();
+	float size = cSub(bolleke1->getBoundaryMax(), bolleke1->getBoundaryMin()).length();
 
 	if (size > 0.001) {
 		bolleke1->scale(5);
@@ -483,7 +460,8 @@ int main(int argc, char* argv[])
 	for (unsigned int i = 0; i < bolleke1->getNumVertices(); i++) {
 		bolleke1->m_vertices->setColor(i, color);
 	}
-	// maak kopie van bollekes
+	// Configure all contactSpheres
+	bolleke1->setWireMode(false);
 	bolleke2 = bolleke1->copy(false, false, true, false);
 	bolleke3 = bolleke1->copy(false, false, true, false);
 	world->addChild(bolleke1);
@@ -494,68 +472,71 @@ int main(int argc, char* argv[])
 	onderkaak->setShowBoundaryBox(false);
 	bovenkaak->setShowBoundaryBox(false);
 
-	// compute collision detection algorithm
-	//onderkaak->createAABBCollisionDetector(0.0001);
-	//bovenkaak->createAABBCollisionDetector(0.0001);
-
 	// enable display list for faster graphic rendering
 	onderkaak->setUseDisplayList(true);
 	bovenkaak->setUseDisplayList(true);
 
-	// center object in scene
-	/*onderkaak->setLocalPos(bovenkaak->getBoundaryCenter());
-	bovenkaak->setLocalPos(onderkaak->getBoundaryCenter());*/
-
-	onderkaak->setLocalPos(cVector3d(0, 0, 0));
-
-	// rotate object in scene
-	//onderkaak->rotateExtrinsicEulerAnglesDeg(-90, 0, -90, C_EULER_ORDER_XYZ);
-	//bovenkaak->rotateExtrinsicEulerAnglesDeg(-90, 0, -90, C_EULER_ORDER_XYZ);
+	//// rotate object in scene
 	onderkaak->rotateExtrinsicEulerAnglesDeg(0, 0, 0, C_EULER_ORDER_XYZ);
 	bovenkaak->rotateExtrinsicEulerAnglesDeg(0, 0, 0, C_EULER_ORDER_XYZ);
 
 	// display options
 	onderkaak->setShowTriangles(true);
 	bovenkaak->setShowTriangles(true);
+	
+	///////////////////////////////////////////////////////////////////////////
+	// Bouw de innerspheretree op van de onderkaak.
+	///////////////////////////////////////////////////////////////////////////
 
-	//Bouw de innerspheretree op van de onderkaak.
+	//onderkaak->createAABBCollisionDetector(0.0001);
 	//Voxelizer* voxelizerOnderkaak = new Voxelizer();
 	//cCollisionAABB* colliderOnderkaak = dynamic_cast<cCollisionAABB*>(onderkaak->getCollisionDetector());
-	//cout << "test: " << *(test->getTriangles()[0].p1) << endl;
 	//voxelizerOnderkaak->setObject(colliderOnderkaak);
 	//voxelizerOnderkaak->setPositie(cVector3d(0,0,0));
 	//voxelizerOnderkaak->setAccuraatheid(25);
 	//voxelizerOnderkaak->initialize();
-
 	//istOnderkaak = voxelizerOnderkaak->buildInnerTree(6, onderkaak->getLocalPos(), (onderkaak->getBoundaryMax()-onderkaak->getBoundaryMin()).length());
 	//delete voxelizerOnderkaak;
 
 	//istOnderkaak->printAABBCollisionTree(5);
+
 	//saveIST(istOnderkaak, "oilpump_2");
+
+	///////////////////////////////////////////////////////////////////////////
+	// Load de innerspheretree op van de onderkaak.
+	///////////////////////////////////////////////////////////////////////////
 	istOnderkaak = loadIST("onderkaak_25_5");
 
+	// Set de IST van de onderkaak
 	onderkaak->setCollisionDetector(istOnderkaak);
-	// Bouw van innerspheretree van de onderkaak is klaar.
+	// Bouw van IST van de onderkaak is klaar.
 
-	// Bouw de innerspheretree van de bovenkaak
+	///////////////////////////////////////////////////////////////////////////
+	// Bouw de innerspheretree op van de bovenkaak.
+	///////////////////////////////////////////////////////////////////////////
+
+	//bovenkaak->createAABBCollisionDetector(0.0001);
 	//Voxelizer* voxelizerBovenkaak = new Voxelizer();
 	//cCollisionAABB* colliderBovenkaak = dynamic_cast<cCollisionAABB*>(bovenkaak->getCollisionDetector());
-	//cout << "test: " << *(test->getTriangles()[0].p1) << endl;
 	//voxelizerBovenkaak->setObject(colliderBovenkaak);
 	//voxelizerBovenkaak->setPositie(cVector3d(0,0,0));
 	//voxelizerBovenkaak->setAccuraatheid(10);
 	//voxelizerBovenkaak->initialize();
-
 	//istBovenkaak = voxelizerBovenkaak->buildInnerTree(5, bovenkaak->getLocalPos(), (bovenkaak->getBoundaryMax() - bovenkaak->getBoundaryMin()).length());
 	//delete voxelizerBovenkaak;
 
 	//istBovenkaak->printAABBCollisionTree(5);
+
 	//saveIST(istBovenkaak, "oilpump");
 
+	///////////////////////////////////////////////////////////////////////////
+	// Load de innerspheretree op van de bovenkaak.
+	///////////////////////////////////////////////////////////////////////////
 	istBovenkaak = loadIST("bovenkaak_25_5");
-	//istBovenkaak->printAABBCollisionTree(5);
 
+	// Set de IST van de bovenkaak.
 	bovenkaak->setCollisionDetector(istBovenkaak);
+	// Bouw van IST van de bovenkaak is klaar.
 
 	//set kleur collision detectors for rendering
 	colorOnderkaak.setGreenForest();
@@ -563,8 +544,6 @@ int main(int argc, char* argv[])
 
 	colorBovenkaak.setOrangeTomato();
 	bovenkaak->setCollisionDetectorProperties(0, colorBovenkaak, true);
-	// Bouw van de innerspheretree van de bovenkaak is klaar.
-
 
 	//--------------------------------------------------------------------------
 	// WIDGETS
@@ -573,7 +552,7 @@ int main(int argc, char* argv[])
 	// create a font
 	font = NEW_CFONTCALIBRI32();
 
-	// create a label to display the haptic and graphic rate of the simulation en of de broadphase raakt.
+	// create a label to display the haptic and graphic rate of the simulation
 	labelRates = new cLabel(font);
 	labelRaakt = new cLabel(font);
 
@@ -701,13 +680,6 @@ void keyCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, 
 		bovenkaak->setWireMode(!useWireMode, true);
 	}
 
-	else if (a_key == GLFW_KEY_R) {
-		cMatrix3d rot = bovenkaak->getLocalRot();
-		rot.rotateAboutGlobalAxisDeg(cVector3d(1, 0, 0), 90);
-		bovenkaak->setLocalRot(rot);
-		istBovenkaak->setRotation(rot);
-	}
-
 	// option - show/hide collision detection tree
 	else if (a_key == GLFW_KEY_3)
 	{
@@ -743,6 +715,14 @@ void keyCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, 
 
 		bovenkaak->setCollisionDetectorProperties(collisionTreeDisplayLevelBovenkaak, colorBovenkaak, true);
 		bovenkaak->setShowCollisionDetector(true, true);
+	}
+
+	//Rotate the object 90 degrees with the x-axis as rotation axis
+	else if (a_key == GLFW_KEY_R) {
+		cMatrix3d rot = bovenkaak->getLocalRot();
+		rot.rotateAboutGlobalAxisDeg(cVector3d(1, 0, 0), 90);
+		bovenkaak->setLocalRot(rot);
+		istBovenkaak->setRotation(rot);
 	}
 
 	// option - show/hide triangles
@@ -926,6 +906,11 @@ void mouseMotionCallback(GLFWwindow* a_window, double a_posX, double a_posY)
 		}
 		gelopenAfstand->add(std::numeric_limits<double>::infinity(), 0.0, 0.0);
 		moved = true;
+
+		/////////////////////////////////////////////////////////////////////
+		// For a better implementation of the rotation interface
+		/////////////////////////////////////////////////////////////////////
+
 		//// get the vector that goes from the camera to the selected point (mouse click)
 		//cVector3d vCameraObject = selectedPoint - camera->getLocalPos();
 
@@ -970,6 +955,7 @@ void mouseScrollCallback(GLFWwindow* a_window, double a_offsetX, double a_offset
 {
 	double r = camera->getSphericalRadius();
 	r = cClamp(r - 1 * a_offsetY, 30.0, 120.0);
+	//  for use with the small oil pump model
 	//r = cClamp(r - 1 * a_offsetY, 1.0, 30.0);
 	camera->setSphericalRadius(r);
 }
@@ -996,13 +982,16 @@ void mouseButtonCallback(GLFWwindow* a_window, int a_button, int a_action, int a
 		if (a_button == GLFW_MOUSE_BUTTON_LEFT) mouseState = MOUSE_SELECTION_TRANSLATE;
 		else  mouseState = MOUSE_SELECTION_ROTATE;
 
-		// detect for any collision between mouse and world
-		//bool hit = camera->selectWorld(mouseX, (height - mouseY), width, height, recorder, settings);
-		bool hit = false;
+		// detect any collision between mouse and world
+		bool hit = camera->selectWorld(mouseX, (height - mouseY), width, height, recorder, settings);
 		if (hit)
 		{
-			/*selectedPoint = recorder.m_nearestCollision.m_globalPos;
+			selectedPoint = recorder.m_nearestCollision.m_globalPos;
 			selectedObject = recorder.m_nearestCollision.m_object;
+			//cCollisionRecorder does not yet work with ISTs
+			//bool computeCollision(cGenericObject* a_object, cVector3d& a_segmentPointA, cVector3d& a_segmentPointB,
+			//cCollisionRecorder& a_recorder, cCollisionSettings& a_settings)
+			//needs to be implemented in the InnerSphereTree class
 			selectedObjectOffset = recorder.m_nearestCollision.m_globalPos - selectedObject->getLocalPos();
 			if (selectedObject != NULL) {
 			if (a_button == GLFW_MOUSE_BUTTON_LEFT) mouseState = MOUSE_SELECTION_TRANSLATE;
@@ -1015,7 +1004,7 @@ void mouseButtonCallback(GLFWwindow* a_window, int a_button, int a_action, int a
 
 			if (selectedObject == bovenkaak) {
 			bovenkaak->m_material->setBlue();
-			}*/
+			}
 		}
 	}
 	else
@@ -1025,47 +1014,6 @@ void mouseButtonCallback(GLFWwindow* a_window, int a_button, int a_action, int a
 }
 
 //------------------------------------------------------------------------------
-
-//void mouseMotionCallback(GLFWwindow* a_window, double a_posX, double a_posY)
-//{
-//	if ((selectedObject != NULL) && (mouseState == MOUSE_SELECTION_ROTATE))
-//	{
-////		// get the vector that goes from the camera to the selected point (mouse click)
-////		cVector3d vCameraObject = selectedPoint - camera->getLocalPos();
-////
-////		// get the vector that point in the direction of the camera. ("where the camera is looking at")
-////		cVector3d vCameraLookAt = camera->getLookVector();
-////
-////		// compute the angle between both vectors
-////		double angle = cAngle(vCameraObject, vCameraLookAt);
-////
-////		// compute the distance between the camera and the plane that intersects the object and 
-////		// which is parallel to the camera plane
-////		double distanceToObjectPlane = vCameraObject.length() * cos(angle);
-////
-////		// convert the pixel in mouse space into a relative position in the world
-////		double factor = (distanceToObjectPlane * tan(0.5 * camera->getFieldViewAngleRad())) / (0.5 * height);
-////		double posRelX = factor * (a_posX - (0.5 * width));
-////		double posRelY = factor * ((height - a_posY) - (0.5 * height));
-////
-////		// compute the new position in world coordinates
-////		cVector3d pos = camera->getLocalPos() +
-////			distanceToObjectPlane * camera->getLookVector() +
-////			posRelX * camera->getRightVector() +
-////			posRelY * camera->getUpVector();
-////
-////		// compute position of object by taking in account offset
-////		cVector3d posObject = pos - selectedObjectOffset;
-////
-////		// apply new position to object
-////		selectedObject->setLocalPos(posObject);
-////
-////		// place cursor at the position of the mouse click
-////		sphereSelect->setLocalPos(pos);
-//
-//		if()
-//	}
-//}
 
 void close(void)
 {
@@ -1131,6 +1079,7 @@ void updateHaptics(void)
 	// main haptic simulation loop
 	//Sphere* A = nullptr;
 	//Sphere* B = nullptr;
+	
 	while (simulationRunning)
 	{
 		/////////////////////////////////////////////////////////////////////////
@@ -1140,37 +1089,20 @@ void updateHaptics(void)
 		// signal frequency counter
 		freqCounterHaptics.signal(1);
 
-		// compute global reference frames for each object
-		//world->computeGlobalPositions(true); 
-
 		///////////////////////////////////////////////////////////////////////////
-		// BROAD PHASE OP BASIS VAN BOUNDARY BOX
+		// Collision Detection
 		///////////////////////////////////////////////////////////////////////////
-
-		/*cVector3d bovenkaakBoundaryMax = bovenkaak->getBoundaryMax() + bovenkaak->getLocalPos();
-		cVector3d onderkaakBoundaryMax = onderkaak->getBoundaryMax() + onderkaak->getLocalPos();
-		cVector3d bovenkaakBoundaryMin = bovenkaak->getBoundaryMin() + bovenkaak->getLocalPos();
-		cVector3d onderkaakBoundaryMin = onderkaak->getBoundaryMin() + onderkaak->getLocalPos();*/
-
-		/*if ((onderkaakBoundaryMax.y() > bovenkaakBoundaryMin.y())
-		&&(onderkaakBoundaryMin.y() < bovenkaakBoundaryMax.y())) {
-		if ((onderkaakBoundaryMax.x() > bovenkaakBoundaryMin.x())
-		&& (onderkaakBoundaryMin.x() < bovenkaakBoundaryMax.x())) {
-		if ((onderkaakBoundaryMax.z() > bovenkaakBoundaryMin.z())
-		&& (onderkaakBoundaryMin.z() < bovenkaakBoundaryMax.z())) {
-		hit = true;
-		}
-		}
-		}*/
 
 		bool accuraatRaakt = false;
-		bool kijken = false;
-		if ((gelopenAfstand->length() > minimumTeLopen)) kijken = true;
 		//double distance_pqp;
 		//int colliding;
-		if (kijken) {
+
+		//contactpoint for collision detection
+		cVector3d* position = new cVector3d(0.0, 0.0, 0.0);
+		if (gelopenAfstand->length() > minimumTeLopen) {
 			double dist = 0;
-			accuraatRaakt = world->computeCollision(onderkaak, bovenkaak, traversalSetting::MULTIPOINT, dist, 50, *positie);
+			accuraatRaakt = world->computeCollision(onderkaak, bovenkaak, traversalSetting::MULTIPOINT, dist, 50, *position);
+			//accuraatRaakt = world->computeCollision(istOnderkaak, istBovenkaak, traversalSetting::DISTANCE, dist, 50, *positie, A, B);
 
 			//set bollekes
 			if (InnerSphereTree::globalPath.getNumberOfCollisions() > 0) {
@@ -1182,8 +1114,6 @@ void updateHaptics(void)
 			if (InnerSphereTree::globalPath.getNumberOfCollisions() > 2) {
 				bolleke3->setLocalPos(InnerSphereTree::globalPath.getCollision(2));
 			}
-
-			//accuraatRaakt = world->computeCollision(istOnderkaak, istBovenkaak, traversalSetting::DISTANCE, dist, 50, *positie, A, B);
 
 			//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 			//PQP implemantation
@@ -1208,38 +1138,19 @@ void updateHaptics(void)
 			//colliding = cres.Colliding();
 			//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-			//if (accuraatRaakt) {
-			//for (unsigned int i = 0; i < InnerSphereTree::globalPath.getPositions().size(); i++) cout << " - pos " << i + 1 << " = " << InnerSphereTree::globalPath.getPositions()[i] << endl;
-			//cout << endl;
-			//}
-
 			//bolleke->setLocalPos((*positie));
 
 			//minimumTeLopen = (float)dist;
 			//gelopenAfstand->zero();
-			//moved = false;
 		}
+
 		//if(!colliding) labelRaakt->m_fontColor.setA(0);
 		//if (distance_pqp > 0.0) labelRaakt->m_fontColor.setA(0);
 		if (!accuraatRaakt) labelRaakt->m_fontColor.setA(0);
 		else labelRaakt->m_fontColor.setA(1);
-
-		//int diepte = cMultiMesh::checkRaakt(onderkaak, bovenkaak, 1);
-		//cout << diepte << endl;
-
-		/*cout << "DATA" << endl;
-		cout << "IST1: " << istOnderkaak->getRootSphere()->getPosition() << " : " << istOnderkaak->getRootSphere()->getRadius() << endl;
-		cout << "IST1: " << istBovenkaak->getRootSphere()->getPosition() << " : " << istBovenkaak->getRootSphere()->getRadius() << endl;
-		cout << istOnderkaak->getRootSphere()->distance(istBovenkaak->getRootSphere(), cVector3d(0,0,0), cVector3d(0,0,0)) << " afstand tussen roots" << endl << endl;*/
-
-		//if (wilupdaten) {
-		//bovenkaak->getCollisionDetector()->update();
-		//wilupdaten = false;
-		//}
 	}
 
 	// exit haptics thread
 	simulationFinished = true;
 }
-
 //////////////////////////////////////////////////////////////////////////
