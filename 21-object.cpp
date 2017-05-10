@@ -89,6 +89,9 @@ cMesh* bolleke1;
 cMesh* bolleke2;
 cMesh* bolleke3;
 
+//contactpoint for collision detection
+cVector3d* position = new cVector3d(0.0, 0.0, 0.0);
+
 // a colored background
 cBackground* background;
 
@@ -1097,8 +1100,6 @@ void updateHaptics(void)
 		//double distance_pqp;
 		//int colliding;
 
-		//contactpoint for collision detection
-		cVector3d* position = new cVector3d(0.0, 0.0, 0.0);
 		if (gelopenAfstand->length() > minimumTeLopen) {
 			double dist = 0;
 			accuraatRaakt = world->computeCollision(onderkaak, bovenkaak, traversalSetting::MULTIPOINT, dist, 50, *position);
@@ -1140,8 +1141,8 @@ void updateHaptics(void)
 
 			//bolleke->setLocalPos((*positie));
 
-			//minimumTeLopen = (float)dist;
-			//gelopenAfstand->zero();
+			minimumTeLopen = (float)dist;
+			gelopenAfstand->zero();
 		}
 
 		//if(!colliding) labelRaakt->m_fontColor.setA(0);
