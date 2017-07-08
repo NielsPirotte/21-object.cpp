@@ -393,11 +393,11 @@ int main(int argc, char* argv[])
 
 	// set materials for the objects
 	matOnderkaak = new cMaterial();
-	matOnderkaak->setWhite();
+	matOnderkaak->setBlack();
 	onderkaak->setMaterial(*matOnderkaak);
 
 	matBovenkaak = new cMaterial();
-	matBovenkaak->setWhite();
+	matBovenkaak->setBlack();
 	bovenkaak->setMaterial(*matBovenkaak);
 
 	// load an object file
@@ -467,9 +467,9 @@ int main(int argc, char* argv[])
 	bolleke1->setWireMode(false);
 	bolleke2 = bolleke1->copy(false, false, true, false);
 	bolleke3 = bolleke1->copy(false, false, true, false);
-	world->addChild(bolleke1);
-	world->addChild(bolleke2);
-	world->addChild(bolleke3);
+	//world->addChild(bolleke1);
+	//world->addChild(bolleke2);
+	//world->addChild(bolleke3);
 
 	// show/hide boundary box
 	onderkaak->setShowBoundaryBox(false);
@@ -491,24 +491,24 @@ int main(int argc, char* argv[])
 	// Bouw de innerspheretree op van de onderkaak.
 	///////////////////////////////////////////////////////////////////////////
 
-	//onderkaak->createAABBCollisionDetector(0.0001);
-	//Voxelizer* voxelizerOnderkaak = new Voxelizer();
-	//cCollisionAABB* colliderOnderkaak = dynamic_cast<cCollisionAABB*>(onderkaak->getCollisionDetector());
-	//voxelizerOnderkaak->setObject(colliderOnderkaak);
-	//voxelizerOnderkaak->setPositie(cVector3d(0,0,0));
-	//voxelizerOnderkaak->setAccuraatheid(25);
-	//voxelizerOnderkaak->initialize();
-	//istOnderkaak = voxelizerOnderkaak->buildInnerTree(6, onderkaak->getLocalPos(), (onderkaak->getBoundaryMax()-onderkaak->getBoundaryMin()).length());
-	//delete voxelizerOnderkaak;
+	onderkaak->createAABBCollisionDetector(0.0001);
+	Voxelizer* voxelizerOnderkaak = new Voxelizer();
+	cCollisionAABB* colliderOnderkaak = dynamic_cast<cCollisionAABB*>(onderkaak->getCollisionDetector());
+	voxelizerOnderkaak->setObject(colliderOnderkaak);
+	voxelizerOnderkaak->setPositie(cVector3d(0,0,0));
+	voxelizerOnderkaak->setAccuraatheid(25);
+	voxelizerOnderkaak->initialize();
+	istOnderkaak = voxelizerOnderkaak->buildInnerTree(5, onderkaak->getLocalPos(), (onderkaak->getBoundaryMax()-onderkaak->getBoundaryMin()).length());
+	delete voxelizerOnderkaak;
 
 	//istOnderkaak->printAABBCollisionTree(5);
 
-	//saveIST(istOnderkaak, "oilpump_2");
+	//saveIST(istOnderkaak, "onderkaak_25_5_t");
 
 	///////////////////////////////////////////////////////////////////////////
 	// Load de innerspheretree op van de onderkaak.
 	///////////////////////////////////////////////////////////////////////////
-	istOnderkaak = loadIST("onderkaak_25_5");
+	//istOnderkaak = loadIST("onderkaak_25_5_t");
 
 	// Set de IST van de onderkaak
 	onderkaak->setCollisionDetector(istOnderkaak);
@@ -518,34 +518,36 @@ int main(int argc, char* argv[])
 	// Bouw de innerspheretree op van de bovenkaak.
 	///////////////////////////////////////////////////////////////////////////
 
-	//bovenkaak->createAABBCollisionDetector(0.0001);
-	//Voxelizer* voxelizerBovenkaak = new Voxelizer();
-	//cCollisionAABB* colliderBovenkaak = dynamic_cast<cCollisionAABB*>(bovenkaak->getCollisionDetector());
-	//voxelizerBovenkaak->setObject(colliderBovenkaak);
-	//voxelizerBovenkaak->setPositie(cVector3d(0,0,0));
-	//voxelizerBovenkaak->setAccuraatheid(10);
-	//voxelizerBovenkaak->initialize();
-	//istBovenkaak = voxelizerBovenkaak->buildInnerTree(5, bovenkaak->getLocalPos(), (bovenkaak->getBoundaryMax() - bovenkaak->getBoundaryMin()).length());
-	//delete voxelizerBovenkaak;
+	/*bovenkaak->createAABBCollisionDetector(0.0001);
+	Voxelizer* voxelizerBovenkaak = new Voxelizer();
+	cCollisionAABB* colliderBovenkaak = dynamic_cast<cCollisionAABB*>(bovenkaak->getCollisionDetector());
+	voxelizerBovenkaak->setObject(colliderBovenkaak);
+	voxelizerBovenkaak->setPositie(cVector3d(0,0,0));
+	voxelizerBovenkaak->setAccuraatheid(25);
+	voxelizerBovenkaak->initialize();
+	istBovenkaak = voxelizerBovenkaak->buildInnerTree(5, bovenkaak->getLocalPos(), (bovenkaak->getBoundaryMax() - bovenkaak->getBoundaryMin()).length());
+	delete voxelizerBovenkaak;*/
 
 	//istBovenkaak->printAABBCollisionTree(5);
 
-	//saveIST(istBovenkaak, "oilpump");
+	//saveIST(istBovenkaak, "bovenkaak_25_5_t");
 
 	///////////////////////////////////////////////////////////////////////////
 	// Load de innerspheretree op van de bovenkaak.
 	///////////////////////////////////////////////////////////////////////////
-	istBovenkaak = loadIST("bovenkaak_25_5");
+	istBovenkaak = loadIST("bovenkaak_25_5_t");
 
 	// Set de IST van de bovenkaak.
 	bovenkaak->setCollisionDetector(istBovenkaak);
 	// Bouw van IST van de bovenkaak is klaar.
 
 	//set kleur collision detectors for rendering
-	colorOnderkaak.setGreenForest();
+	//colorOnderkaak.setGreenForest();
+	colorOnderkaak.setBlack();
 	onderkaak->setCollisionDetectorProperties(0, colorOnderkaak, true);
 
-	colorBovenkaak.setOrangeTomato();
+	//colorBovenkaak.setOrangeTomato();
+	colorBovenkaak.setBlack();
 	bovenkaak->setCollisionDetectorProperties(0, colorBovenkaak, true);
 
 	//--------------------------------------------------------------------------
@@ -686,12 +688,9 @@ void keyCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, 
 	// option - show/hide collision detection tree
 	else if (a_key == GLFW_KEY_3)
 	{
-		//onderkaak->setCollisionDetectorProperties(collisionTreeDisplayLevelOnderkaak, color, true);
-		//bovenkaak->setCollisionDetectorProperties(collisionTreeDisplayLevelBovenkaak, color, true);
 		bool show = onderkaak->getShowCollisionDetector();
 		onderkaak->setShowCollisionDetector(!show, true);
 		bovenkaak->setShowCollisionDetector(!show, true);
-		//doorloopBoxes();
 	}
 
 	// option - decrease depth level of collision tree
@@ -816,14 +815,14 @@ void keyCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, 
 		onderkaak->m_material->setBlue();
 	}
 	else {
-		onderkaak->m_material->setWhite();
+		onderkaak->m_material->setBlack();
 	}
 
 	if (selectedObject == bovenkaak) {
 		bovenkaak->m_material->setBlue();
 	}
 	else {
-		bovenkaak->m_material->setWhite();
+		bovenkaak->m_material->setBlack();
 	}
 
 	if (istBovenkaak != nullptr) istBovenkaak->setPosition((bovenkaak->getLocalPos()));
@@ -1080,8 +1079,8 @@ void updateHaptics(void)
 	simulationFinished = false;
 
 	// main haptic simulation loop
-	//Sphere* A = nullptr;
-	//Sphere* B = nullptr;
+	Sphere* A = nullptr;
+	Sphere* B = nullptr;
 	
 	while (simulationRunning)
 	{
@@ -1100,13 +1099,14 @@ void updateHaptics(void)
 		//double distance_pqp;
 		//int colliding;
 
-		if (gelopenAfstand->length() > minimumTeLopen) {
+		//if (gelopenAfstand->length() > minimumTeLopen) {
+		if (true){
 			double dist = 0;
-			accuraatRaakt = world->computeCollision(onderkaak, bovenkaak, traversalSetting::MULTIPOINT, dist, 50, *position);
-			//accuraatRaakt = world->computeCollision(istOnderkaak, istBovenkaak, traversalSetting::DISTANCE, dist, 50, *positie, A, B);
+			//accuraatRaakt = world->computeCollision(onderkaak, bovenkaak, traversalSetting::MULTIPOINT, dist, 50, *position);
+			accuraatRaakt = world->computeCollision(istOnderkaak, istBovenkaak, traversalSetting::DISTANCE, dist, 50, *position, A, B);
 
 			//set bollekes
-			if (InnerSphereTree::globalPath.getNumberOfCollisions() > 0) {
+			/*if (InnerSphereTree::globalPath.getNumberOfCollisions() > 0) {
 				bolleke1->setLocalPos(InnerSphereTree::globalPath.getCollision(0));
 			}
 			if (InnerSphereTree::globalPath.getNumberOfCollisions() > 1) {
@@ -1114,7 +1114,7 @@ void updateHaptics(void)
 			}
 			if (InnerSphereTree::globalPath.getNumberOfCollisions() > 2) {
 				bolleke3->setLocalPos(InnerSphereTree::globalPath.getCollision(2));
-			}
+			}*/
 
 			//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 			//PQP implemantation
@@ -1141,8 +1141,8 @@ void updateHaptics(void)
 
 			//bolleke->setLocalPos((*positie));
 
-			minimumTeLopen = (float)dist;
-			gelopenAfstand->zero();
+			//minimumTeLopen = (float)dist;
+			//gelopenAfstand->zero();
 		}
 
 		//if(!colliding) labelRaakt->m_fontColor.setA(0);
